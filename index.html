@@ -4,177 +4,218 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hastane Besin Tüketim Kaydı ve Analiz Sistemi</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- jsPDF & AutoTable for client-side direct PDF export without print dialog -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     .badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen pb-16">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between">
 
-  <!-- Header -->
-  <header class="bg-teal-800 text-white shadow-md sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <i class="fa-solid fa-hospital-user text-2xl text-teal-300"></i>
-        <div>
-          <h1 class="text-base md:text-xl font-bold tracking-tight">Hastane Besin Tüketim Kaydı ve Analiz Sistemi</h1>
-          <p class="text-xs text-teal-200">1.500 Besin | TürKomp, TÜBER & Enteral Klinik Veritabanı</p>
+  <div>
+    <!-- Header -->
+    <header class="bg-teal-800 text-white shadow-md sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-hospital-user text-2xl text-teal-300"></i>
+          <div>
+            <h1 class="text-base md:text-xl font-bold tracking-tight">Hastane Besin Tüketim Kaydı ve Analiz Sistemi</h1>
+            <div class="flex items-center flex-wrap gap-2 text-xs text-teal-200 mt-0.5">
+              <span>1.500 Besin | TürKomp, TÜBER & Enteral Klinik Veritabanı</span>
+              <span class="bg-teal-900/80 text-amber-300 border border-teal-600/70 px-2.5 py-0.5 rounded-full font-bold tracking-wide">
+                <i class="fa-brands fa-instagram mr-1"></i>@emreyle.diyet
+              </span>
+            </div>
+          </div>
         </div>
+        <button onclick="sifirlaModal()" class="bg-rose-700 hover:bg-rose-800 text-white px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold flex items-center space-x-1.5 transition">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span>Yeni Hasta / Sıfırla</span>
+        </button>
       </div>
-      <button onclick="sifirlaModal()" class="bg-rose-700 hover:bg-rose-800 text-white px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold flex items-center space-x-1.5 transition">
-        <i class="fa-solid fa-rotate-left"></i>
-        <span>Yeni Hasta / Sıfırla</span>
-      </button>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+      <!-- 1. Hasta Bilgileri ve Hedefler -->
+      <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+        <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2 border-b pb-3 mb-4">
+          <i class="fa-solid fa-id-card-clip text-teal-700"></i>
+          <span>📋 Hasta & Klinik Bilgileri ve Günlük Hedefler</span>
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Hasta Kodu / No</label>
+            <input type="text" id="hastaKodu" placeholder="Örn: Göğüs-102 / Y.E.Ç." 
+                   class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Servis / Bölüm</label>
+            <input type="text" id="hastaServis" placeholder="Örn: Dahiliye / KBB / Yoğun Bakım" 
+                   class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Günlük Enerji Hedefi (kcal)</label>
+            <input type="number" id="hedefKcal" placeholder="Örn: 2000" step="50" min="0" 
+                   oninput="hesaplaVeGuncelle()"
+                   class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Günlük Protein Hedefi (g)</label>
+            <input type="number" id="hedefProtein" placeholder="Örn: 85" step="5" min="0" 
+                   oninput="hesaplaVeGuncelle()"
+                   class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Öğün Girişleri (Merkezi Kısım) -->
+      <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+        <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2 border-b pb-3">
+          <i class="fa-solid fa-utensils text-teal-700"></i>
+          <span>🍽️ Öğün Girişleri & Tüketim Takibi</span>
+        </h2>
+
+        <!-- 6 Meal Accordions -->
+        <div id="mealsContainer" class="space-y-3">
+          <!-- Rendered by JS for 6 meals -->
+        </div>
+      </section>
+
+      <!-- 3. Toplam Tüketim Analizi & Hedef Karşılama Paneli -->
+      <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-5">
+        <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2 border-b pb-3">
+          <i class="fa-solid fa-chart-pie text-teal-700"></i>
+          <span>📊 Toplam Tüketim Analizi & Hedefler</span>
+        </h2>
+
+        <!-- Makro Dağılım Kartları (5 Sütun) -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
+          <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+            <span class="text-xs text-slate-500 font-semibold block">Toplam Enerji</span>
+            <span id="metricKcal" class="text-xl md:text-2xl font-black text-slate-800">0.0</span>
+            <span class="text-[11px] text-slate-500 block">kcal</span>
+          </div>
+          <div class="bg-teal-50 border border-teal-200 p-3 rounded-xl">
+            <span class="text-xs text-teal-700 font-semibold block">Karbonhidrat</span>
+            <span id="metricCarb" class="text-xl md:text-2xl font-black text-teal-900">0.0</span>
+            <span class="text-[11px] text-teal-600 block">g <span id="pctCarb" class="font-bold">(%0.0)</span></span>
+          </div>
+          <div class="bg-blue-50 border border-blue-200 p-3 rounded-xl">
+            <span class="text-xs text-blue-700 font-semibold block">Protein</span>
+            <span id="metricProtein" class="text-xl md:text-2xl font-black text-blue-900">0.0</span>
+            <span class="text-[11px] text-blue-600 block">g <span id="pctProtein" class="font-bold">(%0.0)</span></span>
+          </div>
+          <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl">
+            <span class="text-xs text-amber-700 font-semibold block">Yağ</span>
+            <span id="metricFat" class="text-xl md:text-2xl font-black text-amber-900">0.0</span>
+            <span class="text-[11px] text-amber-600 block">g <span id="pctFat" class="font-bold">(%0.0)</span></span>
+          </div>
+          <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl col-span-2 md:col-span-1">
+            <span class="text-xs text-emerald-700 font-semibold block">Lif (Posa)</span>
+            <span id="metricFiber" class="text-xl md:text-2xl font-black text-emerald-900">0.0</span>
+            <span class="text-[11px] text-emerald-600 block">g</span>
+          </div>
+        </div>
+
+        <!-- Hedef Karşılama İlerleme Çubukları -->
+        <div id="targetSection" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+            <i class="fa-solid fa-bullseye text-teal-600"></i>
+            <span>🎯 Klinik Hedef Karşılama Oranları</span>
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div class="flex justify-between text-xs font-semibold mb-1">
+                <span>Enerji Karşılama: <b id="lblEnerjiKarsilama">%0.0</b></span>
+                <span id="lblEnerjiHedef" class="text-slate-500">Hedef: 0 kcal</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                <div id="barEnerji" class="bg-teal-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs font-semibold mb-1">
+                <span>Protein Karşılama: <b id="lblProteinKarsilama">%0.0</b></span>
+                <span id="lblProteinHedef" class="text-slate-500">Hedef: 0 g</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                <div id="barProtein" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tüm Mikro Besin Ögeleri Tablosu -->
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+            <i class="fa-solid fa-microscope text-teal-600"></i>
+            <span>🔬 Günlük Alınan Tüm Besin Ögeleri Dökümü</span>
+          </h3>
+          <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
+            <table class="w-full text-left text-xs divide-y divide-slate-200">
+              <thead class="bg-slate-50 font-bold text-slate-700">
+                <tr>
+                  <th class="p-2.5">Besin Ögesi</th>
+                  <th class="p-2.5 text-right">Toplam Alınan Miktar</th>
+                  <th class="p-2.5">Birim</th>
+                  <th class="p-2.5 text-slate-400">Klinik Not</th>
+                </tr>
+              </thead>
+              <tbody id="microTableBody" class="divide-y divide-slate-100">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Dışa Aktarma / Rapor Butonları -->
+        <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t">
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Direct PDF Export Button -->
+            <button onclick="olusturVeIndirPDF()" class="bg-rose-700 hover:bg-rose-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
+              <i class="fa-solid fa-file-pdf text-base"></i>
+              <span>📄 Klinik PDF Raporu Oluştur & İndir</span>
+            </button>
+            
+            <!-- CSV Button -->
+            <button onclick="indirCSV()" class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
+              <i class="fa-solid fa-file-csv text-base"></i>
+              <span>📊 Raporu CSV İndir (SPSS / Tez)</span>
+            </button>
+          </div>
+
+          <button onclick="window.print()" class="text-slate-600 hover:text-slate-900 px-3 py-2 text-xs font-semibold flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-print"></i>
+            <span>Yazıcıdan Yazdır</span>
+          </button>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <div class="flex items-center space-x-2">
+        <span class="font-bold text-slate-700">Geliştiren: Yunus Emre Çifçi</span>
+        <span class="text-slate-300">|</span>
+        <span>Beslenme ve Diyetetik Tez Projesi</span>
+      </div>
+      <div class="flex items-center space-x-2 text-teal-700 font-medium">
+        <i class="fa-brands fa-instagram text-sm text-pink-600"></i>
+        <a href="https://instagram.com/emreyle.diyet" target="_blank" class="hover:underline">@emreyle.diyet</a>
+      </div>
     </div>
-  </header>
-
-  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-
-    <!-- 1. Hasta Bilgileri ve Hedefler -->
-    <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-      <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2 border-b pb-3 mb-4">
-        <i class="fa-solid fa-id-card-clip text-teal-700"></i>
-        <span>📋 Hasta Bilgileri ve Günlük Hedefler</span>
-      </h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">Hasta Kodu / No</label>
-          <input type="text" id="hastaKodu" placeholder="Örn: Göğüs-102" 
-                 class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">Günlük Enerji Hedefi (kcal)</label>
-          <input type="number" id="hedefKcal" placeholder="Örn: 2000" step="50" min="0" 
-                 oninput="hesaplaVeGuncelle()"
-                 class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">Günlük Protein Hedefi (g)</label>
-          <input type="number" id="hedefProtein" placeholder="Örn: 85" step="5" min="0" 
-                 oninput="hesaplaVeGuncelle()"
-                 class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. Öğün Girişleri (Merkezi Kısım) -->
-    <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-      <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2 border-b pb-3">
-        <i class="fa-solid fa-utensils text-teal-700"></i>
-        <span>🍽️ Öğün Girişleri & Tüketim Takibi</span>
-      </h2>
-
-      <!-- 6 Meal Accordions -->
-      <div id="mealsContainer" class="space-y-3">
-        <!-- Rendered by JS for 6 meals -->
-      </div>
-    </section>
-
-    <!-- 3. Toplam Tüketim Analizi & Hedef Karşılama Paneli -->
-    <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-5">
-      <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2 border-b pb-3">
-        <i class="fa-solid fa-chart-pie text-teal-700"></i>
-        <span>📊 Toplam Tüketim Analizi & Hedefler</span>
-      </h2>
-
-      <!-- Makro Dağılım Kartları (5 Sütun) -->
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
-        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-          <span class="text-xs text-slate-500 font-semibold block">Toplam Enerji</span>
-          <span id="metricKcal" class="text-xl md:text-2xl font-black text-slate-800">0.0</span>
-          <span class="text-[11px] text-slate-500 block">kcal</span>
-        </div>
-        <div class="bg-teal-50 border border-teal-200 p-3 rounded-xl">
-          <span class="text-xs text-teal-700 font-semibold block">Karbonhidrat</span>
-          <span id="metricCarb" class="text-xl md:text-2xl font-black text-teal-900">0.0</span>
-          <span class="text-[11px] text-teal-600 block">g <span id="pctCarb" class="font-bold">(%0.0)</span></span>
-        </div>
-        <div class="bg-blue-50 border border-blue-200 p-3 rounded-xl">
-          <span class="text-xs text-blue-700 font-semibold block">Protein</span>
-          <span id="metricProtein" class="text-xl md:text-2xl font-black text-blue-900">0.0</span>
-          <span class="text-[11px] text-blue-600 block">g <span id="pctProtein" class="font-bold">(%0.0)</span></span>
-        </div>
-        <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl">
-          <span class="text-xs text-amber-700 font-semibold block">Yağ</span>
-          <span id="metricFat" class="text-xl md:text-2xl font-black text-amber-900">0.0</span>
-          <span class="text-[11px] text-amber-600 block">g <span id="pctFat" class="font-bold">(%0.0)</span></span>
-        </div>
-        <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl col-span-2 md:col-span-1">
-          <span class="text-xs text-emerald-700 font-semibold block">Lif (Posa)</span>
-          <span id="metricFiber" class="text-xl md:text-2xl font-black text-emerald-900">0.0</span>
-          <span class="text-[11px] text-emerald-600 block">g</span>
-        </div>
-      </div>
-
-      <!-- Hedef Karşılama İlerleme Çubukları -->
-      <div id="targetSection" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
-          <i class="fa-solid fa-bullseye text-teal-600"></i>
-          <span>🎯 Klinik Hedef Karşılama Oranları</span>
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <div class="flex justify-between text-xs font-semibold mb-1">
-              <span>Enerji Karşılama: <b id="lblEnerjiKarsilama">%0.0</b></span>
-              <span id="lblEnerjiHedef" class="text-slate-500">Hedef: 0 kcal</span>
-            </div>
-            <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-              <div id="barEnerji" class="bg-teal-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-            </div>
-          </div>
-          <div>
-            <div class="flex justify-between text-xs font-semibold mb-1">
-              <span>Protein Karşılama: <b id="lblProteinKarsilama">%0.0</b></span>
-              <span id="lblProteinHedef" class="text-slate-500">Hedef: 0 g</span>
-            </div>
-            <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-              <div id="barProtein" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tüm Mikro Besin Ögeleri Tablosu -->
-      <div class="space-y-2">
-        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
-          <i class="fa-solid fa-microscope text-teal-600"></i>
-          <span>🔬 Günlük Alınan Tüm Besin Ögeleri Dökümü</span>
-        </h3>
-        <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
-          <table class="w-full text-left text-xs divide-y divide-slate-200">
-            <thead class="bg-slate-50 font-bold text-slate-700">
-              <tr>
-                <th class="p-2.5">Besin Ögesi</th>
-                <th class="p-2.5 text-right">Toplam Alınan Miktar</th>
-                <th class="p-2.5">Birim</th>
-                <th class="p-2.5 text-slate-400">Klinik Not</th>
-              </tr>
-            </thead>
-            <tbody id="microTableBody" class="divide-y divide-slate-100">
-              <!-- Rendered by JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Dışa Aktarma / SPSS & Rapor Butonları -->
-      <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t">
-        <button onclick="indirCSV()" class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
-          <i class="fa-solid fa-file-csv text-base"></i>
-          <span>📄 Raporu CSV Olarak İndir (Tez / SPSS Veri Seti Formatında)</span>
-        </button>
-
-        <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center space-x-2 transition">
-          <i class="fa-solid fa-print"></i>
-          <span>Yazdır / PDF Kaydet</span>
-        </button>
-      </div>
-
-    </section>
-
-  </main>
+  </footer>
 
   <script>
     const MEALS = [
@@ -196,6 +237,22 @@
       "Gece (Ara 3)": []
     };
 
+    // Turkish Normalized Text Helper
+    function trNormalize(text) {
+      if (!text) return "";
+      return String(text)
+        .replace(/İ/g, "i")
+        .replace(/I/g, "ı")
+        .toLowerCase()
+        .replace(/ğ/g, "g")
+        .replace(/ü/g, "u")
+        .replace(/ş/g, "s")
+        .replace(/ı/g, "i")
+        .replace(/ö/g, "o")
+        .replace(/ç/g, "c")
+        .trim();
+    }
+
     // Load Database
     async function init() {
       try {
@@ -207,6 +264,7 @@
           besin_adi: f.besin_adi ?? f["Besin Adı"] ?? "Bilinmeyen",
           standart_porsiyon: f.standart_porsiyon ?? f["Standart Porsiyon"] ?? "",
           referans_miktar_g: Number(f.referans_miktar_g ?? f["Referans Miktar (g/ml)"] ?? 100),
+          arama_anahtarlari: f.arama_anahtarlari ?? f["Arama Anahtarları (Alias)"] ?? "",
           enerji_kcal: Number(f.enerji_kcal ?? f["Enerji (kcal)"] ?? 0),
           protein_g: Number(f.protein_g ?? f["Protein (g)"] ?? 0),
           yag_g: Number(f.yag_g ?? f["Yağ (g)"] ?? 0),
@@ -258,11 +316,17 @@
               
               <!-- Search & Select Food -->
               <div class="md:col-span-5 space-y-1">
-                <label class="text-xs font-bold text-slate-600">Besin / Enteral Ürün Seçiniz</label>
-                <input type="text" id="food_search_${mIdx}" placeholder="İsim yazarak filtrele..." 
-                       oninput="filterFoodDropdown(${mIdx})" 
-                       class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-600 mb-1">
-                <select id="food_select_${mIdx}" class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white">
+                <label class="text-xs font-bold text-slate-600 flex justify-between items-center">
+                  <span>Besin / Enteral Ürün Seçiniz</span>
+                  <span class="text-[10px] text-slate-400 font-normal">Akıllı Öncelikli Arama</span>
+                </label>
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+                  <input type="text" id="food_search_${mIdx}" placeholder="Yazmaya başlayın (Örn: yoğurt, adana, süt)..." 
+                         oninput="filterFoodDropdown(${mIdx})" 
+                         class="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-600 mb-1">
+                </div>
+                <select id="food_select_${mIdx}" class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white font-medium">
                   <!-- Populated by JS -->
                 </select>
               </div>
@@ -271,7 +335,7 @@
               <div class="md:col-span-2 space-y-1">
                 <label class="text-xs font-bold text-slate-600">Miktar (g/ml)</label>
                 <input type="number" id="food_amt_${mIdx}" value="100" min="5" step="10" 
-                       class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600">
+                       class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 font-bold text-slate-700">
               </div>
 
               <!-- Tüketim Yüzdesi -->
@@ -287,7 +351,7 @@
 
               <!-- Ekle Butonu -->
               <div class="md:col-span-2">
-                <button onclick="oguneEkle(${mIdx})" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition">
+                <button onclick="oguneEkle(${mIdx})" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition shadow-sm">
                   <i class="fa-solid fa-plus"></i>
                   <span>Öğüne Ekle</span>
                 </button>
@@ -312,16 +376,86 @@
       el.classList.toggle('hidden');
     }
 
-    // Filter Food Dropdown based on Search
+    // PRIORITIZED ACCURATE SEARCH ALGORITHM
+    // Exact or starting words come FIRST (e.g., "adana" -> Adana Kebap before Analı Kızlı; "yoğurt" -> Yoğurt before Yoğurtlu Çorba)
     function filterFoodDropdown(mIdx) {
-      const search = (document.getElementById(`food_search_${mIdx}`)?.value || '').toLowerCase().trim();
+      const searchRaw = document.getElementById(`food_search_${mIdx}`)?.value || '';
+      const query = trNormalize(searchRaw);
       const select = document.getElementById(`food_select_${mIdx}`);
       if (!select) return;
 
       select.innerHTML = '';
-      const filtered = allFoods.filter(f => !search || f.besin_adi.toLowerCase().includes(search));
+      if (!query) {
+        allFoods.slice(0, 100).forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = f.id;
+          opt.textContent = `${f.besin_adi} (${f.kategori})`;
+          select.appendChild(opt);
+        });
+        return;
+      }
 
-      filtered.slice(0, 150).forEach(f => {
+      // Calculate score for each food
+      const scoredFoods = [];
+
+      for (let f of allFoods) {
+        const nameNorm = trNormalize(f.besin_adi);
+        const aliasNorm = trNormalize(f.arama_anahtarlari || '');
+        const catNorm = trNormalize(f.kategori || '');
+        let score = 0;
+
+        // 1. Exact match on food name
+        if (nameNorm === query) {
+          score += 10000;
+        }
+        // 2. Name starts with query (e.g. "yoğurt" in "yoğurt kaymaksız", "adana" in "adana kebap")
+        else if (nameNorm.startsWith(query)) {
+          score += 5000 - nameNorm.length; // shorter name preferred
+        }
+        // 3. Any individual word in food name starts with query
+        else {
+          const words = nameNorm.split(/[\s,()/-]+/);
+          let wordMatchIndex = words.findIndex(w => w.startsWith(query));
+          if (wordMatchIndex !== -1) {
+            // First word match gives higher score
+            score += 3000 - (wordMatchIndex * 100);
+          } else if (nameNorm.includes(query)) {
+            score += 1500 - nameNorm.indexOf(query);
+          }
+        }
+
+        // 4. Exact word in aliases
+        if (aliasNorm) {
+          if (aliasNorm.startsWith(query)) {
+            score += 800;
+          } else if (aliasNorm.includes(query)) {
+            score += 400;
+          }
+        }
+
+        // 5. Category match
+        if (catNorm.includes(query)) {
+          score += 100;
+        }
+
+        if (score > 0) {
+          scoredFoods.push({ food: f, score: score });
+        }
+      }
+
+      // Sort by score descending
+      scoredFoods.sort((a, b) => b.score - a.score);
+
+      if (scoredFoods.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = "";
+        opt.textContent = "Eşleşen besin bulunamadı";
+        select.appendChild(opt);
+        return;
+      }
+
+      scoredFoods.slice(0, 150).forEach(item => {
+        const f = item.food;
         const opt = document.createElement('option');
         opt.value = f.id;
         opt.textContent = `${f.besin_adi} (${f.kategori})`;
@@ -334,6 +468,8 @@
       const mealName = MEALS[mIdx];
       const select = document.getElementById(`food_select_${mIdx}`);
       const foodId = Number(select.value);
+      if (!foodId) return;
+
       const food = allFoods.find(f => f.id === foodId);
       if (!food) return;
 
@@ -476,7 +612,7 @@
         ["Demir (Fe)", totals.demir_mg.toFixed(2), "mg", "Anemi & hemoglobin takibi"],
         ["Çinko (Zn)", totals.cinko_mg.toFixed(2), "mg", "Yara iyileşmesi & immünite"],
         ["Vitamin A", totals.vitamin_a_mcg.toFixed(1), "mcg", "Epitel & görme fonksiyonu"],
-        ["Vitamin C", totals.vitamin_c_mg.toFixed(1), "mg", "Antioksidan & yara dokusu"],
+        ["Vitamin C", totals.vitamin_c_mg.toFixed(1), "mg", "Antioksidan & doku onarımı"],
         ["Vitamin B1 (Tiamin)", totals.vitamin_b1_mg.toFixed(2), "mg", "Karbonhidrat metabolizması"],
         ["Vitamin B2 (Riboflavin)", totals.vitamin_b2_mg.toFixed(2), "mg", "Hücresel enerji döngüsü"],
         ["Folat (Vitamin B9)", totals.folat_mcg.toFixed(1), "mcg", "Eritrosit & DNA sentezi"]
@@ -500,6 +636,7 @@
     function sifirlaModal() {
       if (confirm("Mevcut hastanın tüm kayıtları silinecek ve form sıfırlanacaktır. Onaylıyor musunuz?")) {
         document.getElementById('hastaKodu').value = '';
+        document.getElementById('hastaServis').value = '';
         document.getElementById('hedefKcal').value = '';
         document.getElementById('hedefProtein').value = '';
         MEALS.forEach((m, idx) => {
@@ -510,9 +647,150 @@
       }
     }
 
+    // ==========================================
+    // DIRECT PDF GENERATION (jsPDF + AutoTable)
+    // No print dialog - directly downloads .pdf!
+    // ==========================================
+    function olusturVeIndirPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      const hasta = document.getElementById('hastaKodu').value.trim() || "Isimsiz_Hasta";
+      const servis = document.getElementById('hastaServis').value.trim() || "Genel Servis";
+      const hKcal = Number(document.getElementById('hedefKcal').value) || 0;
+      const hPro = Number(document.getElementById('hedefProtein').value) || 0;
+
+      // Totals calculation
+      let totals = {
+        enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, karbonhidrat_g: 0, lif_g: 0,
+        sodyum_mg: 0, potasyum_mg: 0, kalsiyum_mg: 0, demir_mg: 0, cinko_mg: 0,
+        vitamin_a_mcg: 0, vitamin_c_mg: 0, vitamin_b1_mg: 0, vitamin_b2_mg: 0, folat_mcg: 0
+      };
+
+      const mealItemsRows = [];
+      MEALS.forEach(m => {
+        tuketimListesi[m].forEach(item => {
+          for (let k in totals) totals[k] += item[k] || 0;
+          mealItemsRows.push([
+            m,
+            item.besin_adi,
+            `${item.girilen_miktar} g/ml`,
+            `%${item.tuketim_yuzdesi}`,
+            item.enerji_kcal.toFixed(1),
+            item.protein_g.toFixed(1),
+            item.karbonhidrat_g.toFixed(1),
+            item.yag_g.toFixed(1)
+          ]);
+        });
+      });
+
+      const kcal = totals.enerji_kcal;
+      const pctCarb = kcal > 0 ? (totals.karbonhidrat_g * 4 / kcal * 100).toFixed(1) : "0.0";
+      const pctPro = kcal > 0 ? (totals.protein_g * 4 / kcal * 100).toFixed(1) : "0.0";
+      const pctFat = kcal > 0 ? (totals.yag_g * 9 / kcal * 100).toFixed(1) : "0.0";
+
+      // Header Banner
+      doc.setFillColor(15, 118, 110); // Teal-800
+      doc.rect(0, 0, 210, 24, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("KLINIK BESIN TUKETIM VE NUTRISYON RAPORU", 14, 12);
+      
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text("TurKomp & TUBER Destekli Klinik Analiz | @emreyle.diyet", 14, 18);
+
+      const tarih = new Date().toLocaleDateString("tr-TR") + " " + new Date().toLocaleTimeString("tr-TR", {hour: '2-digit', minute:'2-digit'});
+      doc.text(tarih, 196, 15, { align: "right" });
+
+      // Patient Information Box
+      doc.setFontSize(10);
+      doc.setTextColor(30, 41, 59);
+      doc.autoTable({
+        startY: 28,
+        theme: "plain",
+        styles: { fontSize: 9, cellPadding: 1.8, textColor: [30, 41, 59] },
+        columnStyles: { 0: { fontStyle: "bold", width: 40 }, 1: { width: 65 }, 2: { fontStyle: "bold", width: 40 }, 3: { width: 45 } },
+        body: [
+          ["Hasta Kodu / No:", hasta, "Servis / Bolum:", servis],
+          ["Enerji Hedefi:", `${hKcal} kcal`, "Protein Hedefi:", `${hPro} g`],
+          ["Enerji Karsilama:", hKcal > 0 ? `%${((kcal / hKcal) * 100).toFixed(1)}` : "Belirtilmedi", "Protein Karsilama:", hPro > 0 ? `%${((totals.protein_g / hPro) * 100).toFixed(1)}` : "Belirtilmedi"]
+        ]
+      });
+
+      // Macro Summary Cards Table
+      doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 3,
+        head: [["Toplam Enerji", "Karbonhidrat (CHO)", "Protein", "Yag", "Lif (Posa)"]],
+        body: [[
+          `${kcal.toFixed(1)} kcal`,
+          `${totals.karbonhidrat_g.toFixed(1)} g (%${pctCarb})`,
+          `${totals.protein_g.toFixed(1)} g (%${pctPro})`,
+          `${totals.yag_g.toFixed(1)} g (%${pctFat})`,
+          `${totals.lif_g.toFixed(1)} g`
+        ]],
+        theme: "grid",
+        headStyles: { fillColor: [13, 148, 136], textColor: [255, 255, 255], fontStyle: "bold", halign: "center", fontSize: 9 },
+        bodyStyles: { halign: "center", fontStyle: "bold", fontSize: 9, textColor: [15, 23, 42] }
+      });
+
+      // Consumed Foods Table
+      doc.text("Ogun Bazli Tuketilen Besinler Listesi", 14, doc.lastAutoTable.finalY + 7);
+      
+      if (mealItemsRows.length === 0) {
+        mealItemsRows.push(["-", "Henuz besin girilmedi", "-", "-", "0.0", "0.0", "0.0", "0.0"]);
+      }
+
+      doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 9,
+        head: [["Ogun", "Besin / Urun Adi", "Miktar", "Tuketim %", "Enerji (kcal)", "Protein (g)", "Karb (g)", "Yag (g)"]],
+        body: mealItemsRows,
+        theme: "striped",
+        headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontSize: 8 },
+        styles: { fontSize: 8, cellPadding: 1.5 },
+        columnStyles: { 4: { halign: "right" }, 5: { halign: "right" }, 6: { halign: "right" }, 7: { halign: "right" } }
+      });
+
+      // Complete Micronutrients Breakdown
+      doc.text("Alinan Tum Mikro Besin Ogeleri ve Mineraller", 14, doc.lastAutoTable.finalY + 7);
+
+      const microData = [
+        ["Doymus Yag", `${totals.doymus_yag_g.toFixed(2)} g`, "Cinko (Zn)", `${totals.cinko_mg.toFixed(2)} mg`],
+        ["Sodyum (Na)", `${totals.sodyum_mg.toFixed(1)} mg`, "Vitamin A", `${totals.vitamin_a_mcg.toFixed(1)} mcg`],
+        ["Potasyum (K)", `${totals.potasyum_mg.toFixed(1)} mg`, "Vitamin C", `${totals.vitamin_c_mg.toFixed(1)} mg`],
+        ["Kalsiyum (Ca)", `${totals.kalsiyum_mg.toFixed(1)} mg`, "Vitamin B1 (Tiamin)", `${totals.vitamin_b1_mg.toFixed(2)} mg`],
+        ["Demir (Fe)", `${totals.demir_mg.toFixed(2)} mg`, "Vitamin B2 (Riboflavin)", `${totals.vitamin_b2_mg.toFixed(2)} mg`],
+        ["Folat (Vit B9)", `${totals.folat_mcg.toFixed(1)} mcg`, "Klinik Durum", "Stabil / Izlem Altinda"]
+      ];
+
+      doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 9,
+        head: [["Besin Ogesi", "Alinan Miktar", "Besin Ogesi", "Alinan Miktar"]],
+        body: microData,
+        theme: "grid",
+        headStyles: { fillColor: [15, 118, 110], textColor: [255, 255, 255], fontSize: 8 },
+        styles: { fontSize: 8, cellPadding: 1.5 },
+        columnStyles: { 1: { fontStyle: "bold", halign: "right" }, 3: { fontStyle: "bold", halign: "right" } }
+      });
+
+      // Signature & Footer Note
+      const pageHeight = doc.internal.pageSize.height;
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text("Raporu Hazirlayan / Diyetisyen: Yunus Emre Cifci | Instagram: @emreyle.diyet", 14, pageHeight - 8);
+      doc.text("Bu rapor akademik tez ve klinik nutrisyon izlemi icin otomatik uretilmistir.", 196, pageHeight - 8, { align: "right" });
+
+      // DIRECT DOWNLOAD
+      const dosyaAdi = `${hasta.replace(/[^a-zA-Z0-9_-]/g, "_")}_Besin_Tuketim_Raporu.pdf`;
+      doc.save(dosyaAdi);
+    }
+
     // Export to CSV for SPSS / Thesis
     function indirCSV() {
       const hasta = document.getElementById('hastaKodu').value.trim() || "hasta_isimsiz";
+      const servis = document.getElementById('hastaServis').value.trim() || "Genel";
       const hKcal = document.getElementById('hedefKcal').value || 0;
       const hPro = document.getElementById('hedefProtein').value || 0;
 
@@ -530,21 +808,21 @@
 
       // Prepare Single Row Thesis/SPSS format
       const headerRow = [
-        "Hasta_Kodu", "Hedef_Kcal", "Hedef_Protein",
+        "Hasta_Kodu", "Servis", "Hedef_Kcal", "Hedef_Protein",
         "Toplam_Enerji_kcal", "Karbonhidrat_g", "Protein_g", "Yag_g", "Doymus_Yag_g", "Lif_g",
         "Sodyum_mg", "Potasyum_mg", "Kalsiyum_mg", "Demir_mg", "Cinko_mg",
         "VitA_mcg", "VitC_mg", "VitB1_mg", "VitB2_mg", "Folat_mcg"
       ];
 
       const valRow = [
-        `"${hasta}"`, hKcal, hPro,
+        `"${hasta}"`, `"${servis}"`, hKcal, hPro,
         totals.enerji_kcal.toFixed(2), totals.karbonhidrat_g.toFixed(2), totals.protein_g.toFixed(2), totals.yag_g.toFixed(2),
         totals.doymus_yag_g.toFixed(2), totals.lif_g.toFixed(2), totals.sodyum_mg.toFixed(1), totals.potasyum_mg.toFixed(1),
         totals.kalsiyum_mg.toFixed(1), totals.demir_mg.toFixed(2), totals.cinko_mg.toFixed(2), totals.vitamin_a_mcg.toFixed(1),
         totals.vitamin_c_mg.toFixed(2), totals.vitamin_b1_mg.toFixed(2), totals.vitamin_b2_mg.toFixed(2), totals.folat_mcg.toFixed(1)
       ];
 
-      const csvContent = "﻿" + headerRow.join(",") + "\n" + valRow.join(",");
+      const csvContent = "\uFEFF" + headerRow.join(",") + "\n" + valRow.join(",");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
