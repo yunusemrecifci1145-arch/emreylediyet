@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- jsPDF & AutoTable for client-side direct PDF export without print dialog -->
+  <!-- jsPDF & AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <style>
@@ -52,7 +52,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-600 mb-1">Hasta Kodu / No</label>
-            <input type="text" id="hastaKodu" placeholder="Örn: Göğüs-102 / Y.E.Ç." 
+            <input type="text" id="hastaKodu" placeholder="Örn: Göğüs-102" 
                    class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
           </div>
           <div>
@@ -84,7 +84,7 @@
 
         <!-- 6 Meal Accordions -->
         <div id="mealsContainer" class="space-y-3">
-          <!-- Rendered by JS for 6 meals -->
+          <!-- Rendered by JS -->
         </div>
       </section>
 
@@ -208,7 +208,7 @@
       <div class="flex items-center space-x-2">
         <span class="font-bold text-slate-700">Geliştiren: Yunus Emre Çifçi</span>
         <span class="text-slate-300">|</span>
-        <span>Beslenme ve Diyetetik Tez Projesi</span>
+        <span class="font-medium text-slate-600">Beslenme ve Diyetetik</span>
       </div>
       <div class="flex items-center space-x-2 text-teal-700 font-medium">
         <i class="fa-brands fa-instagram text-sm text-pink-600"></i>
@@ -237,7 +237,7 @@
       "Gece (Ara 3)": []
     };
 
-    // Turkish Normalized Text Helper
+    // Standard Turkish lowercasing and ASCII conversion for Search
     function trNormalize(text) {
       if (!text) return "";
       return String(text)
@@ -251,6 +251,18 @@
         .replace(/ö/g, "o")
         .replace(/ç/g, "c")
         .trim();
+    }
+
+    // Clean ASCII conversion strictly for PDF rendering to avoid all symbol glitches
+    function pdfSafeText(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/ğ/g, "g").replace(/Ğ/g, "G")
+        .replace(/ü/g, "u").replace(/Ü/g, "U")
+        .replace(/ş/g, "s").replace(/Ş/g, "S")
+        .replace(/ı/g, "i").replace(/İ/g, "I")
+        .replace(/ö/g, "o").replace(/Ö/g, "O")
+        .replace(/ç/g, "c").replace(/Ç/g, "C");
     }
 
     // Load Database
@@ -322,7 +334,7 @@
                 </label>
                 <div class="relative">
                   <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
-                  <input type="text" id="food_search_${mIdx}" placeholder="Yazmaya başlayın (Örn: yoğurt, adana, süt)..." 
+                  <input type="text" id="food_search_${mIdx}" placeholder="Yazmaya başlayın (Örn: yoğurt, adana, tavuk)..." 
                          oninput="filterFoodDropdown(${mIdx})" 
                          class="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-600 mb-1">
                 </div>
@@ -376,8 +388,9 @@
       el.classList.toggle('hidden');
     }
 
-    // PRIORITIZED ACCURATE SEARCH ALGORITHM
-    // Exact or starting words come FIRST (e.g., "adana" -> Adana Kebap before Analı Kızlı; "yoğurt" -> Yoğurt before Yoğurtlu Çorba)
+    // ADVANCED PRIORITY SEARCH ENGINE
+    // Ensures typing "yoğurt" displays base yogurts (Ev Yoğurdu, Süzme Yoğurt, Kaymaksız Yoğurt, vb.)
+    // BEFORE derivatives like "Yoğurt Kaymağı" or "Yoğurtlu Çorba".
     function filterFoodDropdown(mIdx) {
       const searchRaw = document.getElementById(`food_search_${mIdx}`)?.value || '';
       const query = trNormalize(searchRaw);
@@ -395,7 +408,6 @@
         return;
       }
 
-      // Calculate score for each food
       const scoredFoods = [];
 
       for (let f of allFoods) {
@@ -404,38 +416,50 @@
         const catNorm = trNormalize(f.kategori || '');
         let score = 0;
 
-        // 1. Exact match on food name
+        // 1. Exact match on full name
         if (nameNorm === query) {
-          score += 10000;
+          score += 100000;
         }
-        // 2. Name starts with query (e.g. "yoğurt" in "yoğurt kaymaksız", "adana" in "adana kebap")
-        else if (nameNorm.startsWith(query)) {
-          score += 5000 - nameNorm.length; // shorter name preferred
-        }
-        // 3. Any individual word in food name starts with query
-        else {
-          const words = nameNorm.split(/[\s,()/-]+/);
-          let wordMatchIndex = words.findIndex(w => w.startsWith(query));
-          if (wordMatchIndex !== -1) {
-            // First word match gives higher score
-            score += 3000 - (wordMatchIndex * 100);
-          } else if (nameNorm.includes(query)) {
-            score += 1500 - nameNorm.indexOf(query);
+
+        // 2. Primary staple match for queries like "yoğurt"
+        // If user types "yoğurt", base yogurts should rank top:
+        const isBaseYogurt = (query === "yogurt" || query === "yogurdu") && 
+                             (nameNorm.includes("yogurt") || nameNorm.includes("yogurdu")) &&
+                             catNorm.includes("sut");
+        if (isBaseYogurt) {
+          score += 20000;
+          // Heavily deprioritize derivatives like "kaymağı" when query is just "yoğurt"
+          if (nameNorm.includes("kaymagi") || nameNorm.includes("tatlisi") || nameNorm.includes("corbasi")) {
+            score -= 15000;
           }
         }
 
-        // 4. Exact word in aliases
+        // 3. Name starts with query (e.g. "Adana Kebap" for "adana")
+        if (nameNorm.startsWith(query)) {
+          score += 15000 - (nameNorm.length * 5);
+        }
+
+        // 4. Word boundary starts with query
+        const words = nameNorm.split(/[\s,()/-]+/);
+        let firstWordMatchIdx = words.findIndex(w => w.startsWith(query) || w === query);
+        if (firstWordMatchIdx !== -1) {
+          score += 8000 - (firstWordMatchIdx * 400) - (nameNorm.length * 2);
+        } else if (nameNorm.includes(query)) {
+          score += 3000 - nameNorm.indexOf(query);
+        }
+
+        // 5. Alias match
         if (aliasNorm) {
           if (aliasNorm.startsWith(query)) {
-            score += 800;
+            score += 2000;
           } else if (aliasNorm.includes(query)) {
-            score += 400;
+            score += 1000;
           }
         }
 
-        // 5. Category match
-        if (catNorm.includes(query)) {
-          score += 100;
+        // Penalty for secondary words not asked for (e.g. "kaymağı" when searching "yoğurt")
+        if ((nameNorm.includes("kaymagi") || nameNorm.includes("corbasi")) && !query.includes("kaymak") && !query.includes("corba")) {
+          score -= 4000;
         }
 
         if (score > 0) {
@@ -648,8 +672,8 @@
     }
 
     // ==========================================
-    // DIRECT PDF GENERATION (jsPDF + AutoTable)
-    // No print dialog - directly downloads .pdf!
+    // 100% CLEAN PDF EXPORT (NO GLITCHES / OVERLAPS)
+    // Direct PDF Generation with Clean Typography
     // ==========================================
     function olusturVeIndirPDF() {
       const { jsPDF } = window.jspdf;
@@ -672,8 +696,8 @@
         tuketimListesi[m].forEach(item => {
           for (let k in totals) totals[k] += item[k] || 0;
           mealItemsRows.push([
-            m,
-            item.besin_adi,
+            pdfSafeText(m),
+            pdfSafeText(item.besin_adi),
             `${item.girilen_miktar} g/ml`,
             `%${item.tuketim_yuzdesi}`,
             item.enerji_kcal.toFixed(1),
@@ -689,32 +713,31 @@
       const pctPro = kcal > 0 ? (totals.protein_g * 4 / kcal * 100).toFixed(1) : "0.0";
       const pctFat = kcal > 0 ? (totals.yag_g * 9 / kcal * 100).toFixed(1) : "0.0";
 
-      // Header Banner
+      // Top Header Banner
       doc.setFillColor(15, 118, 110); // Teal-800
       doc.rect(0, 0, 210, 24, "F");
 
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.text("KLINIK BESIN TUKETIM VE NUTRISYON RAPORU", 14, 12);
+      doc.setFontSize(13);
+      doc.text("HASTANE BESIN TUKETIM VE NUTRISYON RAPORU", 14, 11);
       
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text("TurKomp & TUBER Destekli Klinik Analiz | @emreyle.diyet", 14, 18);
+      doc.text("Klinik Diyet Takip ve Tuketim Analizi | @emreyle.diyet", 14, 17);
 
-      const tarih = new Date().toLocaleDateString("tr-TR") + " " + new Date().toLocaleTimeString("tr-TR", {hour: '2-digit', minute:'2-digit'});
-      doc.text(tarih, 196, 15, { align: "right" });
+      const now = new Date();
+      const tarihStr = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth()+1).toString().padStart(2, '0')}.${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      doc.text(tarihStr, 196, 14, { align: "right" });
 
       // Patient Information Box
-      doc.setFontSize(10);
-      doc.setTextColor(30, 41, 59);
       doc.autoTable({
         startY: 28,
         theme: "plain",
-        styles: { fontSize: 9, cellPadding: 1.8, textColor: [30, 41, 59] },
-        columnStyles: { 0: { fontStyle: "bold", width: 40 }, 1: { width: 65 }, 2: { fontStyle: "bold", width: 40 }, 3: { width: 45 } },
+        styles: { fontSize: 9, cellPadding: 1.6, textColor: [30, 41, 59] },
+        columnStyles: { 0: { fontStyle: "bold", width: 38 }, 1: { width: 67 }, 2: { fontStyle: "bold", width: 40 }, 3: { width: 45 } },
         body: [
-          ["Hasta Kodu / No:", hasta, "Servis / Bolum:", servis],
+          ["Hasta Kodu / No:", pdfSafeText(hasta), "Servis / Bolum:", pdfSafeText(servis)],
           ["Enerji Hedefi:", `${hKcal} kcal`, "Protein Hedefi:", `${hPro} g`],
           ["Enerji Karsilama:", hKcal > 0 ? `%${((kcal / hKcal) * 100).toFixed(1)}` : "Belirtilmedi", "Protein Karsilama:", hPro > 0 ? `%${((totals.protein_g / hPro) * 100).toFixed(1)}` : "Belirtilmedi"]
         ]
@@ -737,14 +760,17 @@
       });
 
       // Consumed Foods Table
-      doc.text("Ogun Bazli Tuketilen Besinler Listesi", 14, doc.lastAutoTable.finalY + 7);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(30, 41, 59);
+      doc.text("Ogun Bazli Tuketilen Besinler Listesi", 14, doc.lastAutoTable.finalY + 6.5);
       
       if (mealItemsRows.length === 0) {
         mealItemsRows.push(["-", "Henuz besin girilmedi", "-", "-", "0.0", "0.0", "0.0", "0.0"]);
       }
 
       doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 9,
+        startY: doc.lastAutoTable.finalY + 8.5,
         head: [["Ogun", "Besin / Urun Adi", "Miktar", "Tuketim %", "Enerji (kcal)", "Protein (g)", "Karb (g)", "Yag (g)"]],
         body: mealItemsRows,
         theme: "striped",
@@ -754,7 +780,10 @@
       });
 
       // Complete Micronutrients Breakdown
-      doc.text("Alinan Tum Mikro Besin Ogeleri ve Mineraller", 14, doc.lastAutoTable.finalY + 7);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(30, 41, 59);
+      doc.text("Alinan Tum Mikro Besin Ogeleri ve Mineraller", 14, doc.lastAutoTable.finalY + 6.5);
 
       const microData = [
         ["Doymus Yag", `${totals.doymus_yag_g.toFixed(2)} g`, "Cinko (Zn)", `${totals.cinko_mg.toFixed(2)} mg`],
@@ -762,11 +791,11 @@
         ["Potasyum (K)", `${totals.potasyum_mg.toFixed(1)} mg`, "Vitamin C", `${totals.vitamin_c_mg.toFixed(1)} mg`],
         ["Kalsiyum (Ca)", `${totals.kalsiyum_mg.toFixed(1)} mg`, "Vitamin B1 (Tiamin)", `${totals.vitamin_b1_mg.toFixed(2)} mg`],
         ["Demir (Fe)", `${totals.demir_mg.toFixed(2)} mg`, "Vitamin B2 (Riboflavin)", `${totals.vitamin_b2_mg.toFixed(2)} mg`],
-        ["Folat (Vit B9)", `${totals.folat_mcg.toFixed(1)} mcg`, "Klinik Durum", "Stabil / Izlem Altinda"]
+        ["Folat (Vit B9)", `${totals.folat_mcg.toFixed(1)} mcg`, "Klinik Takip", "Beslenme Izleminde"]
       ];
 
       doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 9,
+        startY: doc.lastAutoTable.finalY + 8.5,
         head: [["Besin Ogesi", "Alinan Miktar", "Besin Ogesi", "Alinan Miktar"]],
         body: microData,
         theme: "grid",
@@ -775,15 +804,16 @@
         columnStyles: { 1: { fontStyle: "bold", halign: "right" }, 3: { fontStyle: "bold", halign: "right" } }
       });
 
-      // Signature & Footer Note
+      // Signature & Footer Note (clean separated layout without overlap)
       const pageHeight = doc.internal.pageSize.height;
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(100, 116, 139);
-      doc.text("Raporu Hazirlayan / Diyetisyen: Yunus Emre Cifci | Instagram: @emreyle.diyet", 14, pageHeight - 8);
-      doc.text("Bu rapor akademik tez ve klinik nutrisyon izlemi icin otomatik uretilmistir.", 196, pageHeight - 8, { align: "right" });
+      doc.text("Diyetisyen: Yunus Emre Cifci - Beslenme ve Diyetetik", 14, pageHeight - 8);
+      doc.text("Instagram: @emreyle.diyet", 196, pageHeight - 8, { align: "right" });
 
       // DIRECT DOWNLOAD
-      const dosyaAdi = `${hasta.replace(/[^a-zA-Z0-9_-]/g, "_")}_Besin_Tuketim_Raporu.pdf`;
+      const dosyaAdi = `${pdfSafeText(hasta).replace(/[^a-zA-Z0-9_-]/g, "_")}_Besin_Tuketim_Raporu.pdf`;
       doc.save(dosyaAdi);
     }
 
