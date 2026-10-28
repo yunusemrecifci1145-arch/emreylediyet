@@ -569,17 +569,22 @@
       let netMiktarG = 100;
       let olcuTanimi = "";
 
+      let carpim = 1;
+      const yuzde = Number(document.getElementById(`food_pct_${mIdx}`).value) || 100;
+
       if (mode === 'portion') {
         const porsiyonCarpani = Number(document.getElementById(`food_portion_${mIdx}`).value) || 1;
         netMiktarG = food.referans_miktar_g * porsiyonCarpani;
         olcuTanimi = `${porsiyonCarpani} Porsiyon (${Math.round(netMiktarG)}g)`;
+        // Veritabanındaki değerler zaten 1 standart porsiyon için olduğundan:
+        carpim = porsiyonCarpani * (yuzde / 100);
       } else {
         netMiktarG = Number(document.getElementById(`food_gram_${mIdx}`).value) || food.referans_miktar_g;
         olcuTanimi = `${netMiktarG} g/ml`;
+        // Gramaj girildiğinde referans porsiyon gramajına oranlanır:
+        const refGram = food.referans_miktar_g > 0 ? food.referans_miktar_g : 100;
+        carpim = (netMiktarG / refGram) * (yuzde / 100);
       }
-
-      const yuzde = Number(document.getElementById(`food_pct_${mIdx}`).value) || 100;
-      const carpim = (netMiktarG / 100) * (yuzde / 100);
 
       const item = {
         besin_id: food.id,
@@ -821,7 +826,7 @@
         body: [
           ["Hasta Kodu / No:", pdfSafeText(hasta), "Servis / Bolum:", pdfSafeText(servis)],
           ["Enerji Hedefi:", `${hKcal} kcal`, "Protein Hedefi:", `${hPro} g`],
-          ["Enerji Karsilama:", hKcal > 0 ? `%${((kcal / hKcal) * 100).toFixed(1)}` : "Belirtilmedi", "Protein Karsilama:", hPro > 0 ? `%${((totals.protein_g / hPro) * 100).toFixed(1)}` : "Belirtilmedi"]
+          ["Enerji Karsilama:", hKcal > 0 ? `%${((kcal / hKcal) * 100).toFixed(1)}` : "Tanimlanmadi", "Protein Karsilama:", hPro > 0 ? `%${((totals.protein_g / hPro) * 100).toFixed(1)}` : "Tanimlanmadi"]
         ]
       });
 
@@ -873,7 +878,7 @@
         ["Potasyum (K)", `${totals.potasyum_mg.toFixed(1)} mg`, "Vitamin C", `${totals.vitamin_c_mg.toFixed(1)} mg`],
         ["Kalsiyum (Ca)", `${totals.kalsiyum_mg.toFixed(1)} mg`, "Vitamin B1 (Tiamin)", `${totals.vitamin_b1_mg.toFixed(2)} mg`],
         ["Demir (Fe)", `${totals.demir_mg.toFixed(2)} mg`, "Vitamin B2 (Riboflavin)", `${totals.vitamin_b2_mg.toFixed(2)} mg`],
-        ["Folat (Vit B9)", `${totals.folat_mcg.toFixed(1)} mcg`, "Klinik Takip", "Beslenme Izleminde"]
+        ["Folat (Vit B9)", `${totals.folat_mcg.toFixed(1)} mcg`, "Lif (Posa Toplami)", `${totals.lif_g.toFixed(1)} g`]
       ];
 
       doc.autoTable({
