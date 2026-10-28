@@ -7,7 +7,6 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-H800NGPED6');
   </script>
   <meta charset="UTF-8">
@@ -190,9 +189,9 @@
         <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t">
           <div class="flex flex-wrap items-center gap-2">
             <!-- PDF Export Button -->
-            <button onclick="olusturVeIndirPDF()" class="bg-rose-700 hover:bg-rose-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
+            <button id="btnPdfIndir" onclick="olusturVeIndirPDF()" class="bg-rose-700 hover:bg-rose-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
               <i class="fa-solid fa-file-pdf text-base"></i>
-              <span>📄 Klinik PDF Raporu İndir</span>
+              <span id="btnPdfText">📄 Klinik PDF Raporu İndir</span>
             </button>
             
             <!-- Excel XLSX Export Button -->
@@ -254,6 +253,8 @@
       "Gece (Ara 3)": []
     };
 
+    let cachedTurkishFont = null;
+
     function trNormalize(text) {
       if (!text) return "";
       return String(text)
@@ -267,17 +268,6 @@
         .replace(/ö/g, "o")
         .replace(/ç/g, "c")
         .trim();
-    }
-
-    function pdfSafeText(str) {
-      if (str === null || str === undefined) return "";
-      return String(str)
-        .replace(/ğ/g, "g").replace(/Ğ/g, "G")
-        .replace(/ü/g, "u").replace(/Ü/g, "U")
-        .replace(/ş/g, "s").replace(/Ş/g, "S")
-        .replace(/ı/g, "i").replace(/İ/g, "I")
-        .replace(/ö/g, "o").replace(/Ö/g, "O")
-        .replace(/ç/g, "c").replace(/Ç/g, "C");
     }
 
     async function init() {
@@ -830,11 +820,49 @@
       }
     }
 
-    function olusturVeIndirPDF() {
+    // Gerçek Türkçe Karakter Destekli Font İndirici & Yükleyici
+    async function getTurkishFontBase64() {
+      if (cachedTurkishFont) return cachedTurkishFont;
+      try {
+        const url = "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf";
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        let binary = '';
+        const bytes = new Uint8Array(arrayBuffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        cachedTurkishFont = window.btoa(binary);
+        return cachedTurkishFont;
+      } catch (e) {
+        console.warn("Font indirilemedi:", e);
+        return null;
+      }
+    }
+
+    // ==========================================
+    // %100 TÜRKÇE KARAKTERLİ KLİNİK PDF RAPORU
+    // (ş, ğ, ı, ö, ç, ü, İ karakterlerini tam basar)
+    // ==========================================
+    async function olusturVeIndirPDF() {
+      const btnText = document.getElementById('btnPdfText');
+      if (btnText) btnText.textContent = "Hazırlanıyor...";
+
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-      const hasta = document.getElementById('hastaKodu').value.trim() || "Isimsiz_Hasta";
+      // Türkçe fontu yükle
+      const fontBase64 = await getTurkishFontBase64();
+      let fontName = "helvetica";
+      if (fontBase64) {
+        doc.addFileToVFS("Roboto-Regular.ttf", fontBase64);
+        doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+        doc.setFont("Roboto");
+        fontName = "Roboto";
+      }
+
+      const hasta = document.getElementById('hastaKodu').value.trim() || "İsimsiz Hasta";
       const servis = document.getElementById('hastaServis').value.trim() || "Genel Servis";
       const hKcal = Number(document.getElementById('hedefKcal').value) || 0;
       const hPro = Number(document.getElementById('hedefProtein').value) || 0;
@@ -845,9 +873,9 @@
       MEALS.forEach(m => {
         tuketimListesi[m].forEach(item => {
           mealItemsRows.push([
-            pdfSafeText(m),
-            pdfSafeText(item.besin_adi),
-            pdfSafeText(item.olcu_tanimi),
+            m,
+            item.besin_adi,
+            item.olcu_tanimi,
             `%${item.tuketim_yuzdesi}`,
             item.enerji_kcal.toFixed(1),
             item.protein_g.toFixed(1),
@@ -862,37 +890,40 @@
       const pctPro = kcal > 0 ? (totals.protein_g * 4 / kcal * 100).toFixed(1) : "0.0";
       const pctFat = kcal > 0 ? (totals.yag_g * 9 / kcal * 100).toFixed(1) : "0.0";
 
+      // Başlık Bandı
       doc.setFillColor(15, 118, 110);
       doc.rect(0, 0, 210, 24, "F");
 
       doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
+      doc.setFont(fontName, "bold");
       doc.setFontSize(13);
-      doc.text(pdfSafeText("HASTANE BESIN TUKETIM VE NUTRISYON RAPORU"), 14, 11);
+      doc.text("HASTANE BESİN TÜKETİM VE NUTRİSYON RAPORU", 14, 11);
       
       doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text("Klinik Diyet Takip ve Tuketim Analizi | @emreyle.diyet", 14, 17);
+      doc.setFont(fontName, "normal");
+      doc.text("Klinik Diyet Takip ve Tüketim Analizi | @emreyle.diyet", 14, 17);
 
       const now = new Date();
       const tarihStr = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth()+1).toString().padStart(2, '0')}.${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       doc.text(tarihStr, 196, 14, { align: "right" });
 
+      // Hasta Bilgileri Tablosu
       doc.autoTable({
         startY: 28,
         theme: "plain",
-        styles: { font: "helvetica", fontSize: 9, cellPadding: 1.6, textColor: [30, 41, 59] },
+        styles: { font: fontName, fontSize: 9, cellPadding: 1.6, textColor: [30, 41, 59] },
         columnStyles: { 0: { fontStyle: "bold", width: 38 }, 1: { width: 67 }, 2: { fontStyle: "bold", width: 40 }, 3: { width: 45 } },
         body: [
-          ["Hasta Kodu / No:", pdfSafeText(hasta), "Servis / Bolum:", pdfSafeText(servis)],
+          ["Hasta Kodu / No:", hasta, "Servis / Bölüm:", servis],
           ["Enerji Hedefi:", `${hKcal} kcal`, "Protein Hedefi:", `${hPro} g`],
-          ["Enerji Karsilama:", hKcal > 0 ? `%${((kcal / hKcal) * 100).toFixed(1)}` : "Tanimlanmadi", "Protein Karsilama:", hPro > 0 ? `%${((totals.protein_g / hPro) * 100).toFixed(1)}` : "Tanimlanmadi"]
+          ["Enerji Karşılama:", hKcal > 0 ? `%${((kcal / hKcal) * 100).toFixed(1)}` : "Tanımlanmadı", "Protein Karşılama:", hPro > 0 ? `%${((totals.protein_g / hPro) * 100).toFixed(1)}` : "Tanımlanmadı"]
         ]
       });
 
+      // Makro Özeti Tablosu
       doc.autoTable({
         startY: doc.lastAutoTable.finalY + 3,
-        head: [["Toplam Enerji", "Karbonhidrat (CHO)", "Protein", "Yag", "Lif (Posa)"]],
+        head: [["Toplam Enerji", "Karbonhidrat (CHO)", "Protein", "Yağ", "Lif (Posa)"]],
         body: [[
           `${kcal.toFixed(1)} kcal`,
           `${totals.karbonhidrat_g.toFixed(1)} g (%${pctCarb})`,
@@ -901,72 +932,77 @@
           `${totals.lif_g.toFixed(1)} g`
         ]],
         theme: "grid",
-        styles: { font: "helvetica" },
+        styles: { font: fontName },
         headStyles: { fillColor: [13, 148, 136], textColor: [255, 255, 255], fontStyle: "bold", halign: "center", fontSize: 9 },
         bodyStyles: { halign: "center", fontStyle: "bold", fontSize: 9, textColor: [15, 23, 42] }
       });
 
-      doc.setFont("helvetica", "bold");
+      // Tüketilen Besinler Listesi
+      doc.setFont(fontName, "bold");
       doc.setFontSize(9.5);
       doc.setTextColor(30, 41, 59);
-      doc.text("Ogun Bazli Tuketilen Besinler Listesi", 14, doc.lastAutoTable.finalY + 6.5);
+      doc.text("Öğün Bazlı Tüketilen Besinler Listesi", 14, doc.lastAutoTable.finalY + 6.5);
       
       if (mealItemsRows.length === 0) {
-        mealItemsRows.push(["-", "Henuz besin girilmedi", "-", "-", "0.0", "0.0", "0.0", "0.0"]);
+        mealItemsRows.push(["-", "Henüz besin girilmedi", "-", "-", "0.0", "0.0", "0.0", "0.0"]);
       }
 
       doc.autoTable({
         startY: doc.lastAutoTable.finalY + 8.5,
-        head: [["Ogun", "Besin / Urun Adi", "Degisim / Porsiyon", "Tuketim %", "Enerji (kcal)", "Protein (g)", "Karb (g)", "Yag (g)"]],
+        head: [["Öğün", "Besin / Ürün Adı", "Değişim / Porsiyon", "Tüketim %", "Enerji (kcal)", "Protein (g)", "Karb (g)", "Yağ (g)"]],
         body: mealItemsRows,
         theme: "striped",
-        styles: { font: "helvetica", fontSize: 8, cellPadding: 1.5 },
+        styles: { font: fontName, fontSize: 8, cellPadding: 1.5 },
         headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontSize: 8 },
         columnStyles: { 4: { halign: "right" }, 5: { halign: "right" }, 6: { halign: "right" }, 7: { halign: "right" } }
       });
 
-      doc.setFont("helvetica", "bold");
+      // Mikrobesinler Tablosu
+      doc.setFont(fontName, "bold");
       doc.setFontSize(9.5);
       doc.setTextColor(30, 41, 59);
-      doc.text("Alinan Tum Mikro Besin Ogeleri ve Mineraller", 14, doc.lastAutoTable.finalY + 6.5);
+      doc.text("Alınan Tüm Mikro Besin Öğeleri ve Mineraller", 14, doc.lastAutoTable.finalY + 6.5);
 
       const microData = [
-        ["Doymus Yag", `${totals.doymus_yag_g.toFixed(2)} g`, "Vitamin A", `${totals.vitamin_a_mcg.toFixed(1)} mcg`],
-        ["Tekli Doymamis Yag (MUFA)", `${totals.tekli_doymamis_yag_g.toFixed(2)} g`, "Vitamin C", `${totals.vitamin_c_mg.toFixed(1)} mg`],
-        ["Coklu Doymamis Yag (PUFA)", `${totals.coklu_doymamis_yag_g.toFixed(2)} g`, "D Vitamini", `${totals.vitamin_d_mcg.toFixed(1)} mcg`],
+        ["Doymuş Yağ", `${totals.doymus_yag_g.toFixed(2)} g`, "Vitamin A", `${totals.vitamin_a_mcg.toFixed(1)} mcg`],
+        ["Tekli Doymamış Yağ (MUFA)", `${totals.tekli_doymamis_yag_g.toFixed(2)} g`, "Vitamin C", `${totals.vitamin_c_mg.toFixed(1)} mg`],
+        ["Çoklu Doymamış Yağ (PUFA)", `${totals.coklu_doymamis_yag_g.toFixed(2)} g`, "D Vitamini", `${totals.vitamin_d_mcg.toFixed(1)} mcg`],
         ["Kolesterol", `${totals.kolesterol_mg.toFixed(1)} mg`, "Vitamin B1 (Tiamin)", `${totals.vitamin_b1_mg.toFixed(2)} mg`],
-        ["Ilave Seker", `${totals.ilave_seker_g.toFixed(1)} g`, "Vitamin B2 (Riboflavin)", `${totals.vitamin_b2_mg.toFixed(2)} mg`],
+        ["İlave Şeker", `${totals.ilave_seker_g.toFixed(1)} g`, "Vitamin B2 (Riboflavin)", `${totals.vitamin_b2_mg.toFixed(2)} mg`],
         ["Sodyum (Na)", `${totals.sodyum_mg.toFixed(1)} mg`, "Vitamin B6 (Piridoksin)", `${totals.vitamin_b6_mg.toFixed(2)} mg`],
         ["Potasyum (K)", `${totals.potasyum_mg.toFixed(1)} mg`, "Vitamin B12 (Kobalamin)", `${totals.vitamin_b12_mcg.toFixed(2)} mcg`],
         ["Kalsiyum (Ca)", `${totals.kalsiyum_mg.toFixed(1)} mg`, "Folat (Vit B9)", `${totals.folat_mcg.toFixed(1)} mcg`],
-        ["Magnezyum (Mg)", `${totals.magnezyum_mg.toFixed(1)} mg`, "Cinko (Zn)", `${totals.cinko_mg.toFixed(2)} mg`],
+        ["Magnezyum (Mg)", `${totals.magnezyum_mg.toFixed(1)} mg`, "Çinko (Zn)", `${totals.cinko_mg.toFixed(2)} mg`],
         ["Fosfor (P)", `${totals.fosfor_mg.toFixed(1)} mg`, "Selenyum (Se)", `${totals.selenyum_mcg.toFixed(1)} mcg`],
-        ["Demir (Fe)", `${totals.demir_mg.toFixed(2)} mg`, "Lif (Posa Toplami)", `${totals.lif_g.toFixed(1)} g`]
+        ["Demir (Fe)", `${totals.demir_mg.toFixed(2)} mg`, "Lif (Posa Toplamı)", `${totals.lif_g.toFixed(1)} g`]
       ];
 
       doc.autoTable({
         startY: doc.lastAutoTable.finalY + 8.5,
-        head: [["Besin Ogesi", "Alinan Miktar", "Besin Ogesi", "Alinan Miktar"]],
+        head: [["Besin Öğesi", "Alınan Miktar", "Besin Öğesi", "Alınan Miktar"]],
         body: microData,
         theme: "grid",
-        styles: { font: "helvetica", fontSize: 8, cellPadding: 1.5 },
+        styles: { font: fontName, fontSize: 8, cellPadding: 1.5 },
         headStyles: { fillColor: [15, 118, 110], textColor: [255, 255, 255], fontSize: 8 },
         columnStyles: { 1: { fontStyle: "bold", halign: "right" }, 3: { fontStyle: "bold", halign: "right" } }
       });
 
       const pageHeight = doc.internal.pageSize.height;
-      doc.setFont("helvetica", "normal");
+      doc.setFont(fontName, "normal");
       doc.setFontSize(8);
       doc.setTextColor(100, 116, 139);
-      doc.text("Gelistiren: Yunus Emre Cifci - Beslenme ve Diyetetik", 14, pageHeight - 8);
+      doc.text("Geliştiren: Yunus Emre Çifçi - Beslenme ve Diyetetik", 14, pageHeight - 8);
       doc.text("Instagram: @emreyle.diyet", 196, pageHeight - 8, { align: "right" });
 
-      const dosyaAdi = `${pdfSafeText(hasta).replace(/[^a-zA-Z0-9_-]/g, "_")}_Besin_Tuketim_Raporu.pdf`;
+      const dosyaAdi = `${hasta.replace(/[^a-zA-Z0-9_\-üğşıöçÜĞŞİÖÇ]/g, "_")}_Besin_Tuketim_Raporu.pdf`;
       doc.save(dosyaAdi);
+
+      if (btnText) btnText.textContent = "📄 Klinik PDF Raporu İndir";
     }
 
+    // Excel XLSX İndir
     function indirExcel() {
-      const hasta = document.getElementById('hastaKodu').value.trim() || "Isimsiz_Hasta";
+      const hasta = document.getElementById('hastaKodu').value.trim() || "İsimsiz Hasta";
       const servis = document.getElementById('hastaServis').value.trim() || "Genel";
       const hKcal = Number(document.getElementById('hedefKcal').value) || 0;
       const hPro = Number(document.getElementById('hedefProtein').value) || 0;
@@ -1033,10 +1069,11 @@
       const wsBesin = XLSX.utils.aoa_to_sheet(besinData);
       XLSX.utils.book_append_sheet(wb, wsBesin, "Tuketilen_Besinler");
 
-      const dosyaAdi = `${hasta.replace(/[^a-zA-Z0-9_-]/g, "_")}_Besin_Analizi.xlsx`;
+      const dosyaAdi = `${hasta.replace(/[^a-zA-Z0-9_\-üğşıöçÜĞŞİÖÇ]/g, "_")}_Besin_Analizi.xlsx`;
       XLSX.writeFile(wb, dosyaAdi);
     }
 
+    // CSV İndir
     function indirCSV() {
       const hasta = document.getElementById('hastaKodu').value.trim() || "hasta_isimsiz";
       const servis = document.getElementById('hastaServis').value.trim() || "Genel";
