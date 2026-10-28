@@ -20,6 +20,8 @@
   <!-- jsPDF & AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <!-- SheetJS (Excel .xlsx desteği) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     .badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; }
@@ -96,10 +98,7 @@
           </span>
         </div>
 
-        <!-- 6 Meal Accordions -->
-        <div id="mealsContainer" class="space-y-3">
-          <!-- Rendered by JS -->
-        </div>
+        <div id="mealsContainer" class="space-y-3"></div>
       </section>
 
       <!-- 3. Toplam Tüketim Analizi & Hedef Karşılama Paneli -->
@@ -109,7 +108,7 @@
           <span>📊 Toplam Tüketim Analizi & Hedefler</span>
         </h2>
 
-        <!-- Makro Dağılım Kartları (5 Sütun) -->
+        <!-- Makro Dağılım Kartları -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
           <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
             <span class="text-xs text-slate-500 font-semibold block">Toplam Enerji</span>
@@ -166,7 +165,7 @@
           </div>
         </div>
 
-        <!-- Tüm Mikro Besin Ögeleri Tablosu -->
+        <!-- Mikro Besin Ögeleri Tablosu -->
         <div class="space-y-2">
           <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
             <i class="fa-solid fa-microscope text-teal-600"></i>
@@ -182,26 +181,30 @@
                   <th class="p-2.5 text-slate-400">Klinik Not</th>
                 </tr>
               </thead>
-              <tbody id="microTableBody" class="divide-y divide-slate-100">
-                <!-- Rendered by JS -->
-              </tbody>
+              <tbody id="microTableBody" class="divide-y divide-slate-100"></tbody>
             </table>
           </div>
         </div>
 
-        <!-- Dışa Aktarma / Rapor Butonları -->
+        <!-- Rapor Butonları -->
         <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t">
           <div class="flex flex-wrap items-center gap-2">
-            <!-- Direct PDF Export Button -->
+            <!-- PDF Export Button -->
             <button onclick="olusturVeIndirPDF()" class="bg-rose-700 hover:bg-rose-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
               <i class="fa-solid fa-file-pdf text-base"></i>
-              <span>📄 Klinik PDF Raporu Oluştur & İndir</span>
+              <span>📄 Klinik PDF Raporu İndir</span>
             </button>
             
+            <!-- Excel XLSX Export Button -->
+            <button onclick="indirExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
+              <i class="fa-solid fa-file-excel text-base"></i>
+              <span>📊 Excel İndir (.xlsx)</span>
+            </button>
+
             <!-- CSV Button -->
             <button onclick="indirCSV()" class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
               <i class="fa-solid fa-file-csv text-base"></i>
-              <span>📊 Raporu CSV İndir (SPSS / Excel)</span>
+              <span>📁 CSV İndir (SPSS)</span>
             </button>
           </div>
 
@@ -251,7 +254,6 @@
       "Gece (Ara 3)": []
     };
 
-    // Standard Turkish lowercasing and ASCII conversion for Search
     function trNormalize(text) {
       if (!text) return "";
       return String(text)
@@ -267,9 +269,8 @@
         .trim();
     }
 
-    // Clean ASCII conversion strictly for PDF rendering to avoid all symbol glitches
     function pdfSafeText(str) {
-      if (!str) return "";
+      if (str === null || str === undefined) return "";
       return String(str)
         .replace(/ğ/g, "g").replace(/Ğ/g, "G")
         .replace(/ü/g, "u").replace(/Ü/g, "U")
@@ -279,7 +280,6 @@
         .replace(/ç/g, "c").replace(/Ç/g, "C");
     }
 
-    // Load Database
     async function init() {
       try {
         const res = await fetch('foods_1500.json');
@@ -325,7 +325,6 @@
       }
     }
 
-    // Render Meals Accordions
     function renderMealsUI() {
       const container = document.getElementById('mealsContainer');
       container.innerHTML = '';
@@ -335,7 +334,6 @@
         wrap.className = "border border-slate-200 rounded-xl overflow-hidden bg-slate-50";
 
         wrap.innerHTML = `
-          <!-- Accordion Header -->
           <div onclick="toggleAccordion('acc_${mIdx}')" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 cursor-pointer flex justify-between items-center transition select-none">
             <span class="font-bold text-sm text-slate-800 flex items-center space-x-2">
               <i class="fa-solid fa-chevron-down text-xs text-slate-500 transition-transform" id="icon_acc_${mIdx}"></i>
@@ -344,13 +342,8 @@
             <span class="badge bg-teal-100 text-teal-800 font-bold" id="badge_count_${mIdx}">0 besin</span>
           </div>
 
-          <!-- Accordion Body -->
           <div id="acc_${mIdx}" class="p-4 space-y-4 bg-white border-t border-slate-200">
-            
-            <!-- Input Form Row -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-              
-              <!-- 1. Search & Select Food -->
               <div class="lg:col-span-5 space-y-1">
                 <label class="text-xs font-bold text-slate-600 flex justify-between items-center">
                   <span>Besin / Enteral Ürün Seçiniz</span>
@@ -363,11 +356,9 @@
                          class="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-600 mb-1">
                 </div>
                 <select id="food_select_${mIdx}" onchange="foodSelectedChanged(${mIdx})" class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white font-medium">
-                  <!-- Populated by JS -->
                 </select>
               </div>
 
-              <!-- 2. Giriş Modu: Porsiyon/Değişim vs Net Gramaj -->
               <div class="lg:col-span-3 space-y-1">
                 <div class="flex justify-between items-center">
                   <label class="text-xs font-bold text-slate-600">Ölçü Birimi / Adet</label>
@@ -376,23 +367,12 @@
                   </button>
                 </div>
 
-                <!-- Mode A: Porsiyon Seçimi (Default) -->
                 <div id="box_porsiyon_${mIdx}" class="flex items-center space-x-1.5">
                   <select id="food_portion_${mIdx}" class="w-full px-2.5 py-2 text-xs rounded-lg border border-teal-300 bg-teal-50/50 font-bold text-teal-900 focus:ring-2 focus:ring-teal-600">
-                    <option value="0.25">0.25 Porsiyon / Değişim (Çeyrek)</option>
-                    <option value="0.5">0.5 Porsiyon / Değişim (Yarım)</option>
-                    <option value="0.75">0.75 Porsiyon (3/4)</option>
                     <option value="1" selected>1 Porsiyon / Değişim (Standart)</option>
-                    <option value="1.5">1.5 Porsiyon / Değişim</option>
-                    <option value="2">2 Porsiyon / Değişim</option>
-                    <option value="2.5">2.5 Porsiyon / Değişim</option>
-                    <option value="3">3 Porsiyon / Değişim</option>
-                    <option value="4">4 Porsiyon / Değişim</option>
-                    <option value="5">5 Porsiyon / Değişim</option>
                   </select>
                 </div>
 
-                <!-- Mode B: Doğrudan Net Gramaj Girişi -->
                 <div id="box_gram_${mIdx}" class="hidden flex items-center space-x-1">
                   <input type="number" id="food_gram_${mIdx}" value="100" min="1" step="5" 
                          class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 font-bold text-slate-700 focus:ring-2 focus:ring-teal-600">
@@ -400,7 +380,6 @@
                 </div>
               </div>
 
-              <!-- 3. Tüketim Yüzdesi -->
               <div class="lg:col-span-2 space-y-1">
                 <label class="text-xs font-bold text-slate-600">Tüketim %</label>
                 <select id="food_pct_${mIdx}" class="w-full px-2 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white font-semibold">
@@ -411,21 +390,17 @@
                 </select>
               </div>
 
-              <!-- 4. Ekle Butonu -->
               <div class="lg:col-span-2">
                 <button onclick="oguneEkle(${mIdx})" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition shadow-sm">
                   <i class="fa-solid fa-plus"></i>
                   <span>Öğüne Ekle</span>
                 </button>
               </div>
-
             </div>
 
-            <!-- Eklenen Besinler Listesi -->
             <div id="meal_items_${mIdx}" class="space-y-2">
               <p class="text-xs text-slate-400 italic">Bu öğüne henüz besin eklenmedi.</p>
             </div>
-
           </div>
         `;
         container.appendChild(wrap);
@@ -438,8 +413,7 @@
       el.classList.toggle('hidden');
     }
 
-    // Toggle Input Mode between Porsiyon/Değişim and Net Grams
-    const inputModes = {}; // mIdx -> 'portion' or 'gram'
+    const inputModes = {};
     function toggleInputMode(mIdx) {
       const currentMode = inputModes[mIdx] || 'portion';
       const newMode = currentMode === 'portion' ? 'gram' : 'portion';
@@ -460,7 +434,6 @@
       }
     }
 
-    // Akıllı Adet ve Porsiyon Seçenekleri Oluşturucu
     function populatePortionOptions(mIdx, food) {
       const portionSelect = document.getElementById(`food_portion_${mIdx}`);
       if (!portionSelect || !food) return;
@@ -469,7 +442,6 @@
       const refG = Number(food.referans_miktar_g) || 100;
       const sp = String(food.standart_porsiyon || '');
 
-      // Birim ve adet tespiti (Örn: "5 Adet", "4-5 Adet", "1 Dilim", "2 Adet", "6 Sıkım")
       let unitCount = null;
       let unitName = "Adet";
 
@@ -485,7 +457,6 @@
         }
       }
 
-      // Standart Porsiyon ve Değişim Seçenekleri Grubu
       const grpDegisim = document.createElement('optgroup');
       grpDegisim.label = "⚖️ Diyetisyen Değişim / Porsiyon";
 
@@ -511,7 +482,6 @@
       });
       portionSelect.appendChild(grpDegisim);
 
-      // Adet / Tane Bazlı Seçenekler Grubu (Eğer besin adet/tane ile sayılabiliyorsa)
       if (unitCount && unitCount > 0) {
         const grpAdet = document.createElement('optgroup');
         grpAdet.label = `🔢 ${unitName} Bazlı Seçim (1 Değişim = ${sp})`;
@@ -528,11 +498,9 @@
         portionSelect.appendChild(grpAdet);
       }
 
-      // Her yeni besin seçildiğinde mutlaka 1 Standart Değişim seçili kalır!
       portionSelect.value = "1";
     }
 
-    // When food selection changes, update the label showing what 1 Portion equals
     function foodSelectedChanged(mIdx) {
       const select = document.getElementById(`food_select_${mIdx}`);
       const foodId = Number(select?.value);
@@ -547,9 +515,6 @@
       }
     }
 
-    // ADVANCED PRIORITY SEARCH ENGINE
-    // Ensures typing "yoğurt" displays base yogurts (Ev Yoğurdu, Süzme Yoğurt, Kaymaksız Yoğurt, vb.)
-    // BEFORE derivatives like "Yoğurt Kaymağı" or "Yoğurtlu Çorba".
     function filterFoodDropdown(mIdx) {
       const searchRaw = document.getElementById(`food_search_${mIdx}`)?.value || '';
       const query = trNormalize(searchRaw);
@@ -576,12 +541,10 @@
         const catNorm = trNormalize(f.kategori || '');
         let score = 0;
 
-        // 1. Exact match on full name
         if (nameNorm === query) {
           score += 100000;
         }
 
-        // 2. Primary staple match for queries like "yoğurt"
         const isBaseYogurt = (query === "yogurt" || query === "yogurdu") && 
                              (nameNorm.includes("yogurt") || nameNorm.includes("yogurdu")) &&
                              catNorm.includes("sut");
@@ -592,12 +555,10 @@
           }
         }
 
-        // 3. Name starts with query (e.g. "Adana Kebap" for "adana", "Galeta" for "galeta")
         if (nameNorm.startsWith(query)) {
           score += 15000 - (nameNorm.length * 5);
         }
 
-        // 4. Word boundary starts with query
         const words = nameNorm.split(/[\s,()/-]+/);
         let firstWordMatchIdx = words.findIndex(w => w.startsWith(query) || w === query);
         if (firstWordMatchIdx !== -1) {
@@ -606,7 +567,6 @@
           score += 3000 - nameNorm.indexOf(query);
         }
 
-        // 5. Alias match
         if (aliasNorm) {
           if (aliasNorm.startsWith(query)) {
             score += 2000;
@@ -615,7 +575,6 @@
           }
         }
 
-        // Penalty for secondary words not asked for
         if ((nameNorm.includes("kaymagi") || nameNorm.includes("corbasi")) && !query.includes("kaymak") && !query.includes("corba")) {
           score -= 5000;
         }
@@ -625,7 +584,6 @@
         }
       }
 
-      // Sort by score descending
       scoredFoods.sort((a, b) => b.score - a.score);
 
       if (scoredFoods.length === 0) {
@@ -647,7 +605,6 @@
       foodSelectedChanged(mIdx);
     }
 
-    // Add Food to Meal (Supports both Portion Multiplier and Net Grams!)
     function oguneEkle(mIdx) {
       const mealName = MEALS[mIdx];
       const select = document.getElementById(`food_select_${mIdx}`);
@@ -660,7 +617,6 @@
       const mode = inputModes[mIdx] || 'portion';
       let netMiktarG = 100;
       let olcuTanimi = "";
-
       let carpim = 1;
       const yuzde = Number(document.getElementById(`food_pct_${mIdx}`).value) || 100;
 
@@ -669,16 +625,12 @@
         const porsiyonCarpani = Number(portionSelect?.value) || 1;
         netMiktarG = food.referans_miktar_g * porsiyonCarpani;
 
-        // Seçenek metninden okunabilir adet ve gramajı al
         const selectedOptText = portionSelect?.options[portionSelect.selectedIndex]?.text || '';
         olcuTanimi = selectedOptText || `${porsiyonCarpani} Değişim (${Math.round(netMiktarG)}g)`;
-
-        // Veritabanındaki değerler zaten 1 standart porsiyon için olduğundan:
         carpim = porsiyonCarpani * (yuzde / 100);
       } else {
         netMiktarG = Number(document.getElementById(`food_gram_${mIdx}`).value) || food.referans_miktar_g;
         olcuTanimi = `${netMiktarG} g/ml`;
-        // Gramaj girildiğinde referans porsiyon gramajına oranlanır:
         const refGram = food.referans_miktar_g > 0 ? food.referans_miktar_g : 100;
         carpim = (netMiktarG / refGram) * (yuzde / 100);
       }
@@ -722,7 +674,6 @@
       renderMealItems(mIdx);
       hesaplaVeGuncelle();
 
-      // Besin eklendikten sonra porsiyon seçimi daima 1 Standart Değişime sıfırlanır
       const portionSelectEl = document.getElementById(`food_portion_${mIdx}`);
       if (portionSelectEl) portionSelectEl.value = "1";
     }
@@ -767,8 +718,7 @@
       });
     }
 
-    // Engine: Calculate Totals & Update Analytics
-    function hesaplaVeGuncelle() {
+    function getHesaplananToplamlar() {
       let totals = {
         enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, tekli_doymamis_yag_g: 0, coklu_doymamis_yag_g: 0,
         kolesterol_mg: 0, karbonhidrat_g: 0, ilave_seker_g: 0, lif_g: 0,
@@ -780,20 +730,21 @@
 
       MEALS.forEach(m => {
         tuketimListesi[m].forEach(item => {
-          for (let k in totals) {
-            totals[k] += item[k] || 0;
-          }
+          for (let k in totals) totals[k] += item[k] || 0;
         });
       });
+      return totals;
+    }
 
-      // Update Macro Cards
+    function hesaplaVeGuncelle() {
+      const totals = getHesaplananToplamlar();
+
       document.getElementById('metricKcal').textContent = totals.enerji_kcal.toFixed(1);
       document.getElementById('metricCarb').textContent = totals.karbonhidrat_g.toFixed(1);
       document.getElementById('metricProtein').textContent = totals.protein_g.toFixed(1);
       document.getElementById('metricFat').textContent = totals.yag_g.toFixed(1);
       document.getElementById('metricFiber').textContent = totals.lif_g.toFixed(1);
 
-      // Energy %
       const kcal = totals.enerji_kcal;
       const pctCarb = kcal > 0 ? (totals.karbonhidrat_g * 4 / kcal * 100).toFixed(1) : "0.0";
       const pctPro = kcal > 0 ? (totals.protein_g * 4 / kcal * 100).toFixed(1) : "0.0";
@@ -803,7 +754,6 @@
       document.getElementById('pctProtein').textContent = `(%${pctPro})`;
       document.getElementById('pctFat').textContent = `(%${pctFat})`;
 
-      // Targets Progress
       const hedefKcal = Number(document.getElementById('hedefKcal').value) || 0;
       const hedefProtein = Number(document.getElementById('hedefProtein').value) || 0;
 
@@ -828,7 +778,6 @@
         document.getElementById('barProtein').style.width = `0%`;
       }
 
-      // Micro table
       const rows = [
         ["Doymuş Yağ", totals.doymus_yag_g.toFixed(2), "g", "Kardiyak & lipid izlemi"],
         ["Tekli Doymamış Yağ (MUFA)", totals.tekli_doymamis_yag_g.toFixed(2), "g", "Damar sağlığı & kardiyoprotektif"],
@@ -867,7 +816,6 @@
       });
     }
 
-    // Reset Function
     function sifirlaModal() {
       if (confirm("Mevcut hastanın tüm kayıtları silinecek ve form sıfırlanacaktır. Onaylıyor musunuz?")) {
         document.getElementById('hastaKodu').value = '';
@@ -882,10 +830,6 @@
       }
     }
 
-    // ==========================================
-    // 100% CLEAN PDF EXPORT (NO GLITCHES / OVERLAPS)
-    // Direct PDF Generation with Clean Typography
-    // ==========================================
     function olusturVeIndirPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -895,20 +839,11 @@
       const hKcal = Number(document.getElementById('hedefKcal').value) || 0;
       const hPro = Number(document.getElementById('hedefProtein').value) || 0;
 
-      // Totals calculation
-      let totals = {
-        enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, tekli_doymamis_yag_g: 0, coklu_doymamis_yag_g: 0,
-        kolesterol_mg: 0, karbonhidrat_g: 0, ilave_seker_g: 0, lif_g: 0,
-        sodyum_mg: 0, potasyum_mg: 0, kalsiyum_mg: 0, magnezyum_mg: 0, fosfor_mg: 0,
-        demir_mg: 0, cinko_mg: 0, selenyum_mcg: 0,
-        vitamin_a_mcg: 0, vitamin_c_mg: 0, vitamin_d_mcg: 0, vitamin_b1_mg: 0, vitamin_b2_mg: 0,
-        vitamin_b6_mg: 0, vitamin_b12_mcg: 0, folat_mcg: 0
-      };
-
+      const totals = getHesaplananToplamlar();
       const mealItemsRows = [];
+
       MEALS.forEach(m => {
         tuketimListesi[m].forEach(item => {
-          for (let k in totals) totals[k] += item[k] || 0;
           mealItemsRows.push([
             pdfSafeText(m),
             pdfSafeText(item.besin_adi),
@@ -927,14 +862,13 @@
       const pctPro = kcal > 0 ? (totals.protein_g * 4 / kcal * 100).toFixed(1) : "0.0";
       const pctFat = kcal > 0 ? (totals.yag_g * 9 / kcal * 100).toFixed(1) : "0.0";
 
-      // Top Header Banner
-      doc.setFillColor(15, 118, 110); // Teal-800
+      doc.setFillColor(15, 118, 110);
       doc.rect(0, 0, 210, 24, "F");
 
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
-      doc.text("HASTANE BESIN TUKETIM VE NUTRISYON RAPORU", 14, 11);
+      doc.text(pdfSafeText("HASTANE BESIN TUKETIM VE NUTRISYON RAPORU"), 14, 11);
       
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
@@ -944,11 +878,10 @@
       const tarihStr = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth()+1).toString().padStart(2, '0')}.${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       doc.text(tarihStr, 196, 14, { align: "right" });
 
-      // Patient Information Box
       doc.autoTable({
         startY: 28,
         theme: "plain",
-        styles: { fontSize: 9, cellPadding: 1.6, textColor: [30, 41, 59] },
+        styles: { font: "helvetica", fontSize: 9, cellPadding: 1.6, textColor: [30, 41, 59] },
         columnStyles: { 0: { fontStyle: "bold", width: 38 }, 1: { width: 67 }, 2: { fontStyle: "bold", width: 40 }, 3: { width: 45 } },
         body: [
           ["Hasta Kodu / No:", pdfSafeText(hasta), "Servis / Bolum:", pdfSafeText(servis)],
@@ -957,7 +890,6 @@
         ]
       });
 
-      // Macro Summary Cards Table
       doc.autoTable({
         startY: doc.lastAutoTable.finalY + 3,
         head: [["Toplam Enerji", "Karbonhidrat (CHO)", "Protein", "Yag", "Lif (Posa)"]],
@@ -969,11 +901,11 @@
           `${totals.lif_g.toFixed(1)} g`
         ]],
         theme: "grid",
+        styles: { font: "helvetica" },
         headStyles: { fillColor: [13, 148, 136], textColor: [255, 255, 255], fontStyle: "bold", halign: "center", fontSize: 9 },
         bodyStyles: { halign: "center", fontStyle: "bold", fontSize: 9, textColor: [15, 23, 42] }
       });
 
-      // Consumed Foods Table
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9.5);
       doc.setTextColor(30, 41, 59);
@@ -988,12 +920,11 @@
         head: [["Ogun", "Besin / Urun Adi", "Degisim / Porsiyon", "Tuketim %", "Enerji (kcal)", "Protein (g)", "Karb (g)", "Yag (g)"]],
         body: mealItemsRows,
         theme: "striped",
+        styles: { font: "helvetica", fontSize: 8, cellPadding: 1.5 },
         headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontSize: 8 },
-        styles: { fontSize: 8, cellPadding: 1.5 },
         columnStyles: { 4: { halign: "right" }, 5: { halign: "right" }, 6: { halign: "right" }, 7: { halign: "right" } }
       });
 
-      // Complete Micronutrients Breakdown
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9.5);
       doc.setTextColor(30, 41, 59);
@@ -1018,47 +949,101 @@
         head: [["Besin Ogesi", "Alinan Miktar", "Besin Ogesi", "Alinan Miktar"]],
         body: microData,
         theme: "grid",
+        styles: { font: "helvetica", fontSize: 8, cellPadding: 1.5 },
         headStyles: { fillColor: [15, 118, 110], textColor: [255, 255, 255], fontSize: 8 },
-        styles: { fontSize: 8, cellPadding: 1.5 },
         columnStyles: { 1: { fontStyle: "bold", halign: "right" }, 3: { fontStyle: "bold", halign: "right" } }
       });
 
-      // Signature & Footer Note (clean separated layout without overlap)
       const pageHeight = doc.internal.pageSize.height;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(100, 116, 139);
-      doc.text("Stajyer Diyetisyen: Yunus Emre Cifci - Beslenme ve Diyetetik", 14, pageHeight - 8);
+      doc.text("Gelistiren: Yunus Emre Cifci - Beslenme ve Diyetetik", 14, pageHeight - 8);
       doc.text("Instagram: @emreyle.diyet", 196, pageHeight - 8, { align: "right" });
 
-      // DIRECT DOWNLOAD
       const dosyaAdi = `${pdfSafeText(hasta).replace(/[^a-zA-Z0-9_-]/g, "_")}_Besin_Tuketim_Raporu.pdf`;
       doc.save(dosyaAdi);
     }
 
-    // Export to CSV for SPSS / Thesis
+    function indirExcel() {
+      const hasta = document.getElementById('hastaKodu').value.trim() || "Isimsiz_Hasta";
+      const servis = document.getElementById('hastaServis').value.trim() || "Genel";
+      const hKcal = Number(document.getElementById('hedefKcal').value) || 0;
+      const hPro = Number(document.getElementById('hedefProtein').value) || 0;
+      const totals = getHesaplananToplamlar();
+
+      const wb = XLSX.utils.book_new();
+
+      const ozetData = [
+        ["KLİNİK BİLGİ / ALAN", "DEĞER", "BİRİM"],
+        ["Hasta Kodu / No", hasta, ""],
+        ["Servis / Bölüm", servis, ""],
+        ["Günlük Enerji Hedefi", hKcal, "kcal"],
+        ["Günlük Protein Hedefi", hPro, "g"],
+        ["Toplam Alınan Enerji", totals.enerji_kcal.toFixed(1), "kcal"],
+        ["Karbonhidrat", totals.karbonhidrat_g.toFixed(1), "g"],
+        ["Protein", totals.protein_g.toFixed(1), "g"],
+        ["Yağ", totals.yag_g.toFixed(1), "g"],
+        ["Doymuş Yağ", totals.doymus_yag_g.toFixed(2), "g"],
+        ["Tekli Doymamış Yağ (MUFA)", totals.tekli_doymamis_yag_g.toFixed(2), "g"],
+        ["Çoklu Doymamış Yağ (PUFA)", totals.coklu_doymamis_yag_g.toFixed(2), "g"],
+        ["Kolesterol", totals.kolesterol_mg.toFixed(1), "mg"],
+        ["Lif (Posa)", totals.lif_g.toFixed(1), "g"],
+        ["İlave Şeker", totals.ilave_seker_g.toFixed(1), "g"],
+        ["Sodyum (Na)", totals.sodyum_mg.toFixed(1), "mg"],
+        ["Potasyum (K)", totals.potasyum_mg.toFixed(1), "mg"],
+        ["Kalsiyum (Ca)", totals.kalsiyum_mg.toFixed(1), "mg"],
+        ["Magnezyum (Mg)", totals.magnezyum_mg.toFixed(1), "mg"],
+        ["Fosfor (P)", totals.fosfor_mg.toFixed(1), "mg"],
+        ["Demir (Fe)", totals.demir_mg.toFixed(2), "mg"],
+        ["Çinko (Zn)", totals.cinko_mg.toFixed(2), "mg"],
+        ["Selenyum (Se)", totals.selenyum_mcg.toFixed(1), "mcg"],
+        ["Vitamin A", totals.vitamin_a_mcg.toFixed(1), "mcg"],
+        ["Vitamin C", totals.vitamin_c_mg.toFixed(1), "mg"],
+        ["D Vitamini", totals.vitamin_d_mcg.toFixed(1), "mcg"],
+        ["Vitamin B1", totals.vitamin_b1_mg.toFixed(2), "mg"],
+        ["Vitamin B2", totals.vitamin_b2_mg.toFixed(2), "mg"],
+        ["Vitamin B6", totals.vitamin_b6_mg.toFixed(2), "mg"],
+        ["Vitamin B12", totals.vitamin_b12_mcg.toFixed(2), "mcg"],
+        ["Folat", totals.folat_mcg.toFixed(1), "mcg"]
+      ];
+      const wsOzet = XLSX.utils.aoa_to_sheet(ozetData);
+      XLSX.utils.book_append_sheet(wb, wsOzet, "Besin_Analiz_Ozeti");
+
+      const besinData = [
+        ["Öğün", "Besin Adı", "Ölçü / Değişim", "Tüketim %", "Enerji (kcal)", "Protein (g)", "Karb (g)", "Yağ (g)", "Lif (g)"]
+      ];
+
+      MEALS.forEach(m => {
+        tuketimListesi[m].forEach(item => {
+          besinData.push([
+            m,
+            item.besin_adi,
+            item.olcu_tanimi,
+            item.tuketim_yuzdesi,
+            Number(item.enerji_kcal.toFixed(1)),
+            Number(item.protein_g.toFixed(1)),
+            Number(item.karbonhidrat_g.toFixed(1)),
+            Number(item.yag_g.toFixed(1)),
+            Number(item.lif_g.toFixed(1))
+          ]);
+        });
+      });
+
+      const wsBesin = XLSX.utils.aoa_to_sheet(besinData);
+      XLSX.utils.book_append_sheet(wb, wsBesin, "Tuketilen_Besinler");
+
+      const dosyaAdi = `${hasta.replace(/[^a-zA-Z0-9_-]/g, "_")}_Besin_Analizi.xlsx`;
+      XLSX.writeFile(wb, dosyaAdi);
+    }
+
     function indirCSV() {
       const hasta = document.getElementById('hastaKodu').value.trim() || "hasta_isimsiz";
       const servis = document.getElementById('hastaServis').value.trim() || "Genel";
       const hKcal = document.getElementById('hedefKcal').value || 0;
       const hPro = document.getElementById('hedefProtein').value || 0;
+      const totals = getHesaplananToplamlar();
 
-      let totals = {
-        enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, tekli_doymamis_yag_g: 0, coklu_doymamis_yag_g: 0,
-        kolesterol_mg: 0, karbonhidrat_g: 0, ilave_seker_g: 0, lif_g: 0,
-        sodyum_mg: 0, potasyum_mg: 0, kalsiyum_mg: 0, magnezyum_mg: 0, fosfor_mg: 0,
-        demir_mg: 0, cinko_mg: 0, selenyum_mcg: 0,
-        vitamin_a_mcg: 0, vitamin_c_mg: 0, vitamin_d_mcg: 0, vitamin_b1_mg: 0, vitamin_b2_mg: 0,
-        vitamin_b6_mg: 0, vitamin_b12_mcg: 0, folat_mcg: 0
-      };
-
-      MEALS.forEach(m => {
-        tuketimListesi[m].forEach(item => {
-          for (let k in totals) totals[k] += item[k] || 0;
-        });
-      });
-
-      // Prepare Single Row Thesis/SPSS format
       const headerRow = [
         "Hasta_Kodu", "Servis", "Hedef_Kcal", "Hedef_Protein",
         "Toplam_Enerji_kcal", "Karbonhidrat_g", "Protein_g", "Yag_g", "Doymus_Yag_g",
@@ -1075,7 +1060,7 @@
         totals.vitamin_a_mcg.toFixed(1), totals.vitamin_c_mg.toFixed(2), totals.vitamin_d_mcg.toFixed(2), totals.vitamin_b1_mg.toFixed(2), totals.vitamin_b2_mg.toFixed(2), totals.vitamin_b6_mg.toFixed(2), totals.vitamin_b12_mcg.toFixed(2), totals.folat_mcg.toFixed(1)
       ];
 
-      const csvContent = "\uFEFF" + headerRow.join(",") + "\n" + valRow.join(",");
+      const csvContent = "\uFEFF" + headerRow.join(";") + "\r\n" + valRow.join(";");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -1086,7 +1071,6 @@
       document.body.removeChild(link);
     }
 
-    // Init
     init();
   </script>
 </body>
