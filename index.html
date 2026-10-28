@@ -27,14 +27,14 @@
           <div>
             <h1 class="text-base md:text-xl font-bold tracking-tight">Hastane Besin Tüketim Kaydı ve Analiz Sistemi</h1>
             <div class="flex items-center flex-wrap gap-2 text-xs text-teal-200 mt-0.5">
-              <span>1.500 Besin | TürKomp, TÜBER & Enteral Klinik Veritabanı</span>
+              <span>1.500 Besin | TürKomp, TÜBER & Enteral Klinik Değişim Veritabanı</span>
               <span class="bg-teal-900/80 text-amber-300 border border-teal-600/70 px-2.5 py-0.5 rounded-full font-bold tracking-wide">
                 <i class="fa-brands fa-instagram mr-1"></i>@emreyle.diyet
               </span>
             </div>
           </div>
         </div>
-        <button onclick="sifirlaModal()" class="bg-rose-700 hover:bg-rose-800 text-white px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold flex items-center space-x-1.5 transition">
+        <button onclick="sifirlaModal()" class="bg-rose-700 hover:bg-rose-800 text-white px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold flex items-center space-x-1.5 transition shadow-sm">
           <i class="fa-solid fa-rotate-left"></i>
           <span>Yeni Hasta / Sıfırla</span>
         </button>
@@ -52,12 +52,12 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-600 mb-1">Hasta Kodu / No</label>
-            <input type="text" id="hastaKodu" placeholder="Örn: Göğüs-102" 
+            <input type="text" id="hastaKodu" placeholder="Örn: Dahiliye-204" 
                    class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-600 mb-1">Servis / Bölüm</label>
-            <input type="text" id="hastaServis" placeholder="Örn: Dahiliye / KBB / Yoğun Bakım" 
+            <input type="text" id="hastaServis" placeholder="Örn: KBB / Genel Cerrahi / Nöroloji" 
                    class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
           </div>
           <div>
@@ -77,10 +77,15 @@
 
       <!-- 2. Öğün Girişleri (Merkezi Kısım) -->
       <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-        <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2 border-b pb-3">
-          <i class="fa-solid fa-utensils text-teal-700"></i>
-          <span>🍽️ Öğün Girişleri & Tüketim Takibi</span>
-        </h2>
+        <div class="flex items-center justify-between border-b pb-3 flex-wrap gap-2">
+          <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2">
+            <i class="fa-solid fa-utensils text-teal-700"></i>
+            <span>🍽️ Öğün Girişleri & Klinik Değişim Takibi</span>
+          </h2>
+          <span class="text-xs text-teal-800 bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 font-medium">
+            <i class="fa-solid fa-scale-balanced mr-1"></i>Diyetisyen Değişim / Porsiyon veya Net Gramaj Seçimi
+          </span>
+        </div>
 
         <!-- 6 Meal Accordions -->
         <div id="mealsContainer" class="space-y-3">
@@ -187,7 +192,7 @@
             <!-- CSV Button -->
             <button onclick="indirCSV()" class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
               <i class="fa-solid fa-file-csv text-base"></i>
-              <span>📊 Raporu CSV İndir (SPSS / Tez)</span>
+              <span>📊 Raporu CSV İndir (SPSS / Excel)</span>
             </button>
           </div>
 
@@ -208,7 +213,7 @@
       <div class="flex items-center space-x-2">
         <span class="font-bold text-slate-700">Geliştiren: Yunus Emre Çifçi</span>
         <span class="text-slate-300">|</span>
-        <span class="font-medium text-slate-600">Beslenme ve Diyetetik</span>
+        <span class="font-semibold text-teal-800">Beslenme ve Diyetetik</span>
       </div>
       <div class="flex items-center space-x-2 text-teal-700 font-medium">
         <i class="fa-brands fa-instagram text-sm text-pink-600"></i>
@@ -274,7 +279,7 @@
           id: f.id ?? f["ID"],
           kategori: f.kategori ?? f["Kategori"] ?? "Genel",
           besin_adi: f.besin_adi ?? f["Besin Adı"] ?? "Bilinmeyen",
-          standart_porsiyon: f.standart_porsiyon ?? f["Standart Porsiyon"] ?? "",
+          standart_porsiyon: f.standart_porsiyon ?? f["Standart Porsiyon"] ?? "1 Porsiyon",
           referans_miktar_g: Number(f.referans_miktar_g ?? f["Referans Miktar (g/ml)"] ?? 100),
           arama_anahtarlari: f.arama_anahtarlari ?? f["Arama Anahtarları (Alias)"] ?? "",
           enerji_kcal: Number(f.enerji_kcal ?? f["Enerji (kcal)"] ?? 0),
@@ -324,45 +329,71 @@
           <div id="acc_${mIdx}" class="p-4 space-y-4 bg-white border-t border-slate-200">
             
             <!-- Input Form Row -->
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end bg-slate-50 p-3.5 rounded-xl border border-slate-200">
               
-              <!-- Search & Select Food -->
-              <div class="md:col-span-5 space-y-1">
+              <!-- 1. Search & Select Food -->
+              <div class="lg:col-span-5 space-y-1">
                 <label class="text-xs font-bold text-slate-600 flex justify-between items-center">
                   <span>Besin / Enteral Ürün Seçiniz</span>
-                  <span class="text-[10px] text-slate-400 font-normal">Akıllı Öncelikli Arama</span>
+                  <span id="porsiyon_tanim_${mIdx}" class="text-[11px] text-teal-700 font-bold truncate max-w-[200px]">1 Değişim / Porsiyon</span>
                 </label>
                 <div class="relative">
                   <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
-                  <input type="text" id="food_search_${mIdx}" placeholder="Yazmaya başlayın (Örn: yoğurt, adana, tavuk)..." 
+                  <input type="text" id="food_search_${mIdx}" placeholder="Yazmaya başlayın (Örn: yoğurt, galeta, pilav)..." 
                          oninput="filterFoodDropdown(${mIdx})" 
                          class="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-600 mb-1">
                 </div>
-                <select id="food_select_${mIdx}" class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white font-medium">
+                <select id="food_select_${mIdx}" onchange="foodSelectedChanged(${mIdx})" class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white font-medium">
                   <!-- Populated by JS -->
                 </select>
               </div>
 
-              <!-- Miktar -->
-              <div class="md:col-span-2 space-y-1">
-                <label class="text-xs font-bold text-slate-600">Miktar (g/ml)</label>
-                <input type="number" id="food_amt_${mIdx}" value="100" min="5" step="10" 
-                       class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 font-bold text-slate-700">
+              <!-- 2. Giriş Modu: Porsiyon/Değişim vs Net Gramaj -->
+              <div class="lg:col-span-3 space-y-1">
+                <div class="flex justify-between items-center">
+                  <label class="text-xs font-bold text-slate-600">Ölçü Birimi</label>
+                  <button type="button" onclick="toggleInputMode(${mIdx})" id="mode_toggle_${mIdx}" class="text-[10px] text-teal-700 font-bold underline hover:text-teal-900">
+                    Net Grama Geç
+                  </button>
+                </div>
+
+                <!-- Mode A: Porsiyon Seçimi (Default) -->
+                <div id="box_porsiyon_${mIdx}" class="flex items-center space-x-1.5">
+                  <select id="food_portion_${mIdx}" class="w-full px-2.5 py-2 text-xs rounded-lg border border-teal-300 bg-teal-50/50 font-bold text-teal-900 focus:ring-2 focus:ring-teal-600">
+                    <option value="0.25">0.25 Porsiyon / Değişim (Çeyrek)</option>
+                    <option value="0.5">0.5 Porsiyon / Değişim (Yarım)</option>
+                    <option value="0.75">0.75 Porsiyon (3/4)</option>
+                    <option value="1" selected>1 Porsiyon / Değişim (Standart)</option>
+                    <option value="1.5">1.5 Porsiyon / Değişim</option>
+                    <option value="2">2 Porsiyon / Değişim</option>
+                    <option value="2.5">2.5 Porsiyon / Değişim</option>
+                    <option value="3">3 Porsiyon / Değişim</option>
+                    <option value="4">4 Porsiyon / Değişim</option>
+                    <option value="5">5 Porsiyon / Değişim</option>
+                  </select>
+                </div>
+
+                <!-- Mode B: Doğrudan Net Gramaj Girişi -->
+                <div id="box_gram_${mIdx}" class="hidden flex items-center space-x-1">
+                  <input type="number" id="food_gram_${mIdx}" value="100" min="1" step="5" 
+                         class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 font-bold text-slate-700 focus:ring-2 focus:ring-teal-600">
+                  <span class="text-xs font-bold text-slate-500">g/ml</span>
+                </div>
               </div>
 
-              <!-- Tüketim Yüzdesi -->
-              <div class="md:col-span-3 space-y-1">
+              <!-- 3. Tüketim Yüzdesi -->
+              <div class="lg:col-span-2 space-y-1">
                 <label class="text-xs font-bold text-slate-600">Tüketim %</label>
-                <select id="food_pct_${mIdx}" class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white font-semibold">
-                  <option value="100">%100 (Tümünü Tüketti)</option>
-                  <option value="75">%75 (Üçte İkisini Tüketti)</option>
-                  <option value="50">%50 (Yarısını Tüketti)</option>
-                  <option value="25">%25 (Az Tüketti)</option>
+                <select id="food_pct_${mIdx}" class="w-full px-2 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white font-semibold">
+                  <option value="100">%100 (Tamamı)</option>
+                  <option value="75">%75 (3/4'ü)</option>
+                  <option value="50">%50 (Yarısı)</option>
+                  <option value="25">%25 (Çeyreği)</option>
                 </select>
               </div>
 
-              <!-- Ekle Butonu -->
-              <div class="md:col-span-2">
+              <!-- 4. Ekle Butonu -->
+              <div class="lg:col-span-2">
                 <button onclick="oguneEkle(${mIdx})" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition shadow-sm">
                   <i class="fa-solid fa-plus"></i>
                   <span>Öğüne Ekle</span>
@@ -388,6 +419,42 @@
       el.classList.toggle('hidden');
     }
 
+    // Toggle Input Mode between Porsiyon/Değişim and Net Grams
+    const inputModes = {}; // mIdx -> 'portion' or 'gram'
+    function toggleInputMode(mIdx) {
+      const currentMode = inputModes[mIdx] || 'portion';
+      const newMode = currentMode === 'portion' ? 'gram' : 'portion';
+      inputModes[mIdx] = newMode;
+
+      const pBox = document.getElementById(`box_porsiyon_${mIdx}`);
+      const gBox = document.getElementById(`box_gram_${mIdx}`);
+      const btn = document.getElementById(`mode_toggle_${mIdx}`);
+
+      if (newMode === 'gram') {
+        pBox.classList.add('hidden');
+        gBox.classList.remove('hidden');
+        btn.textContent = "Porsiyona Geç";
+      } else {
+        gBox.classList.add('hidden');
+        pBox.classList.remove('hidden');
+        btn.textContent = "Net Grama Geç";
+      }
+    }
+
+    // When food selection changes, update the label showing what 1 Portion equals
+    function foodSelectedChanged(mIdx) {
+      const select = document.getElementById(`food_select_${mIdx}`);
+      const foodId = Number(select?.value);
+      const food = allFoods.find(f => f.id === foodId);
+      const label = document.getElementById(`porsiyon_tanim_${mIdx}`);
+      const gramInput = document.getElementById(`food_gram_${mIdx}`);
+
+      if (food && label) {
+        label.textContent = `1 Değişim = ${food.standart_porsiyon} (${food.referans_miktar_g}g)`;
+        if (gramInput) gramInput.value = food.referans_miktar_g;
+      }
+    }
+
     // ADVANCED PRIORITY SEARCH ENGINE
     // Ensures typing "yoğurt" displays base yogurts (Ev Yoğurdu, Süzme Yoğurt, Kaymaksız Yoğurt, vb.)
     // BEFORE derivatives like "Yoğurt Kaymağı" or "Yoğurtlu Çorba".
@@ -402,9 +469,10 @@
         allFoods.slice(0, 100).forEach(f => {
           const opt = document.createElement('option');
           opt.value = f.id;
-          opt.textContent = `${f.besin_adi} (${f.kategori})`;
+          opt.textContent = `${f.besin_adi} [${f.standart_porsiyon}]`;
           select.appendChild(opt);
         });
+        foodSelectedChanged(mIdx);
         return;
       }
 
@@ -422,19 +490,17 @@
         }
 
         // 2. Primary staple match for queries like "yoğurt"
-        // If user types "yoğurt", base yogurts should rank top:
         const isBaseYogurt = (query === "yogurt" || query === "yogurdu") && 
                              (nameNorm.includes("yogurt") || nameNorm.includes("yogurdu")) &&
                              catNorm.includes("sut");
         if (isBaseYogurt) {
-          score += 20000;
-          // Heavily deprioritize derivatives like "kaymağı" when query is just "yoğurt"
+          score += 25000;
           if (nameNorm.includes("kaymagi") || nameNorm.includes("tatlisi") || nameNorm.includes("corbasi")) {
-            score -= 15000;
+            score -= 20000;
           }
         }
 
-        // 3. Name starts with query (e.g. "Adana Kebap" for "adana")
+        // 3. Name starts with query (e.g. "Adana Kebap" for "adana", "Galeta" for "galeta")
         if (nameNorm.startsWith(query)) {
           score += 15000 - (nameNorm.length * 5);
         }
@@ -457,9 +523,9 @@
           }
         }
 
-        // Penalty for secondary words not asked for (e.g. "kaymağı" when searching "yoğurt")
+        // Penalty for secondary words not asked for
         if ((nameNorm.includes("kaymagi") || nameNorm.includes("corbasi")) && !query.includes("kaymak") && !query.includes("corba")) {
-          score -= 4000;
+          score -= 5000;
         }
 
         if (score > 0) {
@@ -482,30 +548,45 @@
         const f = item.food;
         const opt = document.createElement('option');
         opt.value = f.id;
-        opt.textContent = `${f.besin_adi} (${f.kategori})`;
+        opt.textContent = `${f.besin_adi} [${f.standart_porsiyon}]`;
         select.appendChild(opt);
       });
+
+      foodSelectedChanged(mIdx);
     }
 
-    // Add Food to Meal (Clinical Formula: (100g_deger / 100) * Miktar * (Yuzde / 100))
+    // Add Food to Meal (Supports both Portion Multiplier and Net Grams!)
     function oguneEkle(mIdx) {
       const mealName = MEALS[mIdx];
       const select = document.getElementById(`food_select_${mIdx}`);
-      const foodId = Number(select.value);
+      const foodId = Number(select?.value);
       if (!foodId) return;
 
       const food = allFoods.find(f => f.id === foodId);
       if (!food) return;
 
-      const miktar = Number(document.getElementById(`food_amt_${mIdx}`).value) || 100;
+      const mode = inputModes[mIdx] || 'portion';
+      let netMiktarG = 100;
+      let olcuTanimi = "";
+
+      if (mode === 'portion') {
+        const porsiyonCarpani = Number(document.getElementById(`food_portion_${mIdx}`).value) || 1;
+        netMiktarG = food.referans_miktar_g * porsiyonCarpani;
+        olcuTanimi = `${porsiyonCarpani} Porsiyon (${Math.round(netMiktarG)}g)`;
+      } else {
+        netMiktarG = Number(document.getElementById(`food_gram_${mIdx}`).value) || food.referans_miktar_g;
+        olcuTanimi = `${netMiktarG} g/ml`;
+      }
+
       const yuzde = Number(document.getElementById(`food_pct_${mIdx}`).value) || 100;
-      const carpim = (miktar / 100) * (yuzde / 100);
+      const carpim = (netMiktarG / 100) * (yuzde / 100);
 
       const item = {
         besin_id: food.id,
         besin_adi: food.besin_adi,
         kategori: food.kategori,
-        girilen_miktar: miktar,
+        olcu_tanimi: olcuTanimi,
+        net_miktar_g: netMiktarG,
         tuketim_yuzdesi: yuzde,
         enerji_kcal: food.enerji_kcal * carpim,
         protein_g: food.protein_g * carpim,
@@ -556,9 +637,10 @@
         div.innerHTML = `
           <div>
             <span class="font-bold text-slate-800">${item.besin_adi}</span>
-            <span class="text-slate-500 ml-2">(${item.girilen_miktar} g/ml, %${item.tuketim_yuzdesi})</span>
-            <span class="text-[11px] text-teal-700 block font-semibold mt-0.5">
-              ${item.enerji_kcal.toFixed(1)} kcal | ${item.protein_g.toFixed(1)}g Pro | ${item.karbonhidrat_g.toFixed(1)}g Karb | ${item.yag_g.toFixed(1)}g Yağ
+            <span class="text-teal-800 font-semibold ml-1.5 bg-teal-100/60 px-2 py-0.5 rounded">${item.olcu_tanimi}</span>
+            <span class="text-slate-500 ml-1">(%${item.tuketim_yuzdesi} tüketildi)</span>
+            <span class="text-[11px] text-slate-600 block font-medium mt-1">
+              <b>${item.enerji_kcal.toFixed(1)}</b> kcal | <b>${item.protein_g.toFixed(1)}g</b> Pro | <b>${item.karbonhidrat_g.toFixed(1)}g</b> Karb | <b>${item.yag_g.toFixed(1)}g</b> Yağ
             </span>
           </div>
           <button onclick="ogundenSil(${mIdx}, ${idx})" class="text-rose-600 hover:text-rose-800 font-bold px-2 py-1 rounded hover:bg-rose-50 transition">
@@ -698,7 +780,7 @@
           mealItemsRows.push([
             pdfSafeText(m),
             pdfSafeText(item.besin_adi),
-            `${item.girilen_miktar} g/ml`,
+            pdfSafeText(item.olcu_tanimi),
             `%${item.tuketim_yuzdesi}`,
             item.enerji_kcal.toFixed(1),
             item.protein_g.toFixed(1),
@@ -771,7 +853,7 @@
 
       doc.autoTable({
         startY: doc.lastAutoTable.finalY + 8.5,
-        head: [["Ogun", "Besin / Urun Adi", "Miktar", "Tuketim %", "Enerji (kcal)", "Protein (g)", "Karb (g)", "Yag (g)"]],
+        head: [["Ogun", "Besin / Urun Adi", "Degisim / Porsiyon", "Tuketim %", "Enerji (kcal)", "Protein (g)", "Karb (g)", "Yag (g)"]],
         body: mealItemsRows,
         theme: "striped",
         headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontSize: 8 },
@@ -809,7 +891,7 @@
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(100, 116, 139);
-      doc.text("Diyetisyen: Yunus Emre Cifci - Beslenme ve Diyetetik", 14, pageHeight - 8);
+      doc.text("Stajyer Diyetisyen: Yunus Emre Cifci - Beslenme ve Diyetetik", 14, pageHeight - 8);
       doc.text("Instagram: @emreyle.diyet", 196, pageHeight - 8, { align: "right" });
 
       // DIRECT DOWNLOAD
