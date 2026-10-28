@@ -35,14 +35,11 @@
           <i class="fa-solid fa-hospital-user text-2xl text-teal-300"></i>
           <div>
             <h1 class="text-base md:text-xl font-bold tracking-tight">Hastane Besin Tüketim Kaydı ve Analiz Sistemi</h1>
-            <div class="text-xs text-teal-200 mt-1 leading-snug">
-              <div class="font-medium text-teal-100">800 Temel Besin · 580 Hazır Yemek & Menü · 120 Enteral Ürün</div>
-              <div class="flex items-center flex-wrap gap-2 mt-0.5">
-                <span class="text-teal-200 font-semibold">TürKomp, TÜBER & Klinik Değişim Veritabanı</span>
-                <span class="bg-teal-900/80 text-amber-300 border border-teal-600/70 px-2.5 py-0.5 rounded-full font-bold tracking-wide">
-                  <i class="fa-brands fa-instagram mr-1"></i>@emreyle.diyet
-                </span>
-              </div>
+            <div class="flex items-center flex-wrap gap-2 text-xs text-teal-200 mt-0.5">
+              <span>1.550 Besin & 26 Besin Ögesi | TürKomp, TÜBER & Enteral Klinik Değişim Veritabanı</span>
+              <span class="bg-teal-900/80 text-amber-300 border border-teal-600/70 px-2.5 py-0.5 rounded-full font-bold tracking-wide">
+                <i class="fa-brands fa-instagram mr-1"></i>@emreyle.diyet
+              </span>
             </div>
           </div>
         </div>
@@ -1040,16 +1037,11 @@
     }
 
     // Export to CSV for SPSS / Thesis
-        // ============================================================
-    // EXCEL İLE %100 UYUMLU, HATASIZ CSV AKTARIM FONKSİYONU
-    // ============================================================
     function indirCSV() {
-      const hastaInput = document.getElementById('hastaKodu').value.trim();
-      const servisInput = document.getElementById('hastaServis').value.trim();
-      const hasta = hastaInput || "Hasta_Kayit";
-      const servis = servisInput || "Genel";
-      const hKcal = Number(document.getElementById('hedefKcal').value) || 0;
-      const hPro = Number(document.getElementById('hedefProtein').value) || 0;
+      const hasta = document.getElementById('hastaKodu').value.trim() || "hasta_isimsiz";
+      const servis = document.getElementById('hastaServis').value.trim() || "Genel";
+      const hKcal = document.getElementById('hedefKcal').value || 0;
+      const hPro = document.getElementById('hedefProtein').value || 0;
 
       let totals = {
         enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, tekli_doymamis_yag_g: 0, coklu_doymamis_yag_g: 0,
@@ -1060,132 +1052,41 @@
         vitamin_b6_mg: 0, vitamin_b12_mcg: 0, folat_mcg: 0
       };
 
-      const mealItems = [];
       MEALS.forEach(m => {
         tuketimListesi[m].forEach(item => {
           for (let k in totals) totals[k] += item[k] || 0;
-          mealItems.push({
-            ogun: m,
-            ad: item.besin_adi,
-            olcu: item.olcu_tanimi,
-            yuzde: item.tuketim_yuzdesi,
-            kcal: item.enerji_kcal,
-            pro: item.protein_g,
-            cho: item.karbonhidrat_g,
-            yag: item.yag_g
-          });
         });
       });
 
-      const now = new Date();
-      const tarihStr = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth()+1).toString().padStart(2, '0')}.${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-      // Sayıları Excel için Türkçe ondalık virgülle biçimlendirme yardımcısı
-      const fmt = (n, d = 1) => Number(n || 0).toFixed(d).replace('.', ',');
-
-      const lines = [];
-      
-      // Excel doğrudan sütunlara ayırsın diye başa direktif eklenir:
-      lines.push("sep=;");
-      lines.push("HASTANE BESIN TÜKETIM VE NUTRISYON RAPORU;;;;;;;;");
-      lines.push(`Rapor Tarihi;${tarihStr};Geliştiren;Yunus Emre Çifçi (@emreyle.diyet);;;;;`);
-      lines.push(";;;;;;;;");
-
-      // 1. Hasta & Hedef Bilgileri
-      lines.push("1. HASTA VE HEDEF BILGILERI;;;;;;;;");
-      lines.push(`Hasta Kodu / No;${hasta};Servis / Bölüm;${servis};;;;;`);
-      lines.push(`Günlük Enerji Hedefi (kcal);${hKcal > 0 ? hKcal : 'Belirtilmedi'};Gerçekleşen Enerji (kcal);${fmt(totals.enerji_kcal)};Enerji Karşılama (%);${hKcal > 0 ? '%' + fmt((totals.enerji_kcal/hKcal)*100) : '-'};;;`);
-      lines.push(`Günlük Protein Hedefi (g);${hPro > 0 ? hPro : 'Belirtilmedi'};Gerçekleşen Protein (g);${fmt(totals.protein_g)};Protein Karşılama (%);${hPro > 0 ? '%' + fmt((totals.protein_g/hPro)*100) : '-'};;;`);
-      lines.push(";;;;;;;;");
-
-      // 2. Tüketilen Besinler Listesi
-      lines.push("2. OGUN BAZLI TUKETILEN BESINLER;;;;;;;;");
-      lines.push("Öğün;Besin / Ürün Adı;Ölçü / Adet;Tüketim %;Enerji (kcal);Protein (g);Karbonhidrat (g);Yağ (g)");
-      
-      if (mealItems.length === 0) {
-        lines.push("-;Henüz besin eklenmedi;-;-;0;0;0;0");
-      } else {
-        mealItems.forEach(it => {
-          lines.push(`"${it.ogun}";"${it.ad}";"${it.olcu}";%${it.yuzde};${fmt(it.kcal)};${fmt(it.pro)};${fmt(it.cho)};${fmt(it.yag)}`);
-        });
-      }
-      lines.push(";;;;;;;;");
-
-      // 3. Makro & Mikro Besin Ögeleri Özeti
-      lines.push("3. GUNLUK ALINAN TUM BESIN OGELERI VE MIKRO BESINLER;;;;;;;;");
-      lines.push("Besin Ögesi;Alınan Miktar;Birim;Klinik Not;;;;;");
-      
-      const microRows = [
-        ["Toplam Enerji", fmt(totals.enerji_kcal), "kcal", "Toplam kalori alımı"],
-        ["Karbonhidrat (CHO)", fmt(totals.karbonhidrat_g), "g", "Enerji dağılımı"],
-        ["Protein", fmt(totals.protein_g), "g", "Doku onarımı & azot dengesi"],
-        ["Yağ (Total Lipid)", fmt(totals.yag_g), "g", "Lipid dengesi"],
-        ["Doymuş Yağ", fmt(totals.doymus_yag_g, 2), "g", "Kardiyak & lipid izlemi"],
-        ["Tekli Doymamış Yağ (MUFA)", fmt(totals.tekli_doymamis_yag_g, 2), "g", "Damar sağlığı & kardiyoprotektif"],
-        ["Çoklu Doymamış Yağ (PUFA)", fmt(totals.coklu_doymamis_yag_g, 2), "g", "Hücre zarı & esansiyel yağ asitleri"],
-        ["Kolesterol", fmt(totals.kolesterol_mg), "mg", "Kardiyovasküler diyet kısıtlaması"],
-        ["İlave Şeker", fmt(totals.ilave_seker_g), "g", "Glisemik kontrol & insülin direnci"],
-        ["Lif (Posa)", fmt(totals.lif_g), "g", "Gastrointestinal motilite"],
-        ["Sodyum (Na)", fmt(totals.sodyum_mg), "mg", "Tansiyon & ödem kontrolü"],
-        ["Potasyum (K)", fmt(totals.potasyum_mg), "mg", "Renal & elektrolit dengesi"],
-        ["Kalsiyum (Ca)", fmt(totals.kalsiyum_mg), "mg", "Kemik bütünlüğü & kas iletimi"],
-        ["Magnezyum (Mg)", fmt(totals.magnezyum_mg), "mg", "Kas krampları & enzim kofaktörü"],
-        ["Fosfor (P)", fmt(totals.fosfor_mg), "mg", "Kemik mineralizasyonu & renal diyet"],
-        ["Demir (Fe)", fmt(totals.demir_mg, 2), "mg", "Anemi & hemoglobin sentezi"],
-        ["Çinko (Zn)", fmt(totals.cinko_mg, 2), "mg", "Yara iyileşmesi & immün yanıt"],
-        ["Selenyum (Se)", fmt(totals.selenyum_mcg), "mcg", "Antioksidan savunma & tiroit metabolizması"],
-        ["Vitamin A", fmt(totals.vitamin_a_mcg), "mcg", "Epitel & görme fonksiyonu"],
-        ["Vitamin C", fmt(totals.vitamin_c_mg), "mg", "Antioksidan, doku onarımı & kolajen"],
-        ["D Vitamini", fmt(totals.vitamin_d_mcg), "mcg", "Kalsiyum emilimi & immün sistem"],
-        ["Vitamin B1 (Tiamin)", fmt(totals.vitamin_b1_mg, 2), "mg", "Karbonhidrat metabolizması & sinir sistemi"],
-        ["Vitamin B2 (Riboflavin)", fmt(totals.vitamin_b2_mg, 2), "mg", "Hücresel enerji döngüsü & FAD sentezi"],
-        ["Vitamin B6 (Piridoksin)", fmt(totals.vitamin_b6_mg, 2), "mg", "Protein metabolizması & nörotransmiterler"],
-        ["Vitamin B12 (Kobalamin)", fmt(totals.vitamin_b12_mcg, 2), "mcg", "Eritrosit matürasyonu & nörolojik sağlık"],
-        ["Folat (Vitamin B9)", fmt(totals.folat_mcg), "mcg", "Eritrosit & DNA sentezi"]
-      ];
-
-      microRows.forEach(r => {
-        lines.push(`"${r[0]}";${r[1]};${r[2]};"${r[3]}";;;;;`);
-      });
-      lines.push(";;;;;;;;");
-
-      // 4. SPSS / Tez Ham Veri Satırı (İstatistiksel analiz için)
-      lines.push("4. TEZ VE SPSS ANALIZI ICIN HAM VERI SATIRI;;;;;;;;");
-      const spssHeaders = [
+      // Prepare Single Row Thesis/SPSS format
+      const headerRow = [
         "Hasta_Kodu", "Servis", "Hedef_Kcal", "Hedef_Protein",
         "Toplam_Enerji_kcal", "Karbonhidrat_g", "Protein_g", "Yag_g", "Doymus_Yag_g",
         "Tekli_Doymamis_Yag_g", "Coklu_Doymamis_Yag_g", "Kolesterol_mg", "Ilave_Seker_g", "Lif_g",
         "Sodyum_mg", "Potasyum_mg", "Kalsiyum_mg", "Magnezyum_mg", "Fosfor_mg", "Demir_mg", "Cinko_mg", "Selenyum_mcg",
         "VitA_mcg", "VitC_mg", "VitD_mcg", "VitB1_mg", "VitB2_mg", "VitB6_mg", "VitB12_mcg", "Folat_mcg"
       ];
-      const spssValues = [
+
+      const valRow = [
         `"${hasta}"`, `"${servis}"`, hKcal, hPro,
-        fmt(totals.enerji_kcal, 2), fmt(totals.karbonhidrat_g, 2), fmt(totals.protein_g, 2), fmt(totals.yag_g, 2), fmt(totals.doymus_yag_g, 2),
-        fmt(totals.tekli_doymamis_yag_g, 2), fmt(totals.coklu_doymamis_yag_g, 2), fmt(totals.kolesterol_mg, 1), fmt(totals.ilave_seker_g, 1), fmt(totals.lif_g, 2),
-        fmt(totals.sodyum_mg, 1), fmt(totals.potasyum_mg, 1), fmt(totals.kalsiyum_mg, 1), fmt(totals.magnezyum_mg, 1), fmt(totals.fosfor_mg, 1), fmt(totals.demir_mg, 2), fmt(totals.cinko_mg, 2), fmt(totals.selenyum_mcg, 1),
-        fmt(totals.vitamin_a_mcg, 1), fmt(totals.vitamin_c_mg, 2), fmt(totals.vitamin_d_mcg, 2), fmt(totals.vitamin_b1_mg, 2), fmt(totals.vitamin_b2_mg, 2), fmt(totals.vitamin_b6_mg, 2), fmt(totals.vitamin_b12_mcg, 2), fmt(totals.folat_mcg, 1)
+        totals.enerji_kcal.toFixed(2), totals.karbonhidrat_g.toFixed(2), totals.protein_g.toFixed(2), totals.yag_g.toFixed(2), totals.doymus_yag_g.toFixed(2),
+        totals.tekli_doymamis_yag_g.toFixed(2), totals.coklu_doymamis_yag_g.toFixed(2), totals.kolesterol_mg.toFixed(1), totals.ilave_seker_g.toFixed(1), totals.lif_g.toFixed(2),
+        totals.sodyum_mg.toFixed(1), totals.potasyum_mg.toFixed(1), totals.kalsiyum_mg.toFixed(1), totals.magnezyum_mg.toFixed(1), totals.fosfor_mg.toFixed(1), totals.demir_mg.toFixed(2), totals.cinko_mg.toFixed(2), totals.selenyum_mcg.toFixed(1),
+        totals.vitamin_a_mcg.toFixed(1), totals.vitamin_c_mg.toFixed(2), totals.vitamin_d_mcg.toFixed(2), totals.vitamin_b1_mg.toFixed(2), totals.vitamin_b2_mg.toFixed(2), totals.vitamin_b6_mg.toFixed(2), totals.vitamin_b12_mcg.toFixed(2), totals.folat_mcg.toFixed(1)
       ];
 
-      lines.push(spssHeaders.join(";"));
-      lines.push(spssValues.join(";"));
-
-      // UTF-8 BOM (﻿) ile birleştirerek Excel'in Türkçe karakterleri ve sütunları tanıması garanti edilir
-      const csvContent = "﻿" + lines.join("
-");
+      const csvContent = "\uFEFF" + headerRow.join(",") + "\n" + valRow.join(",");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
-      
-      // Dosya adındaki tüm geçersiz veya tehlikeli karakterleri temizleme
-      const safeFilename = hasta.replace(/[^a-zA-Z0-9_À-ſ-]/g, "_");
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `${safeFilename}_tuketim_analizi.csv`);
+      link.setAttribute("download", `${hasta}_tuketim_analizi.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
     }
 
+    // Init
     init();
   </script>
 </body>
