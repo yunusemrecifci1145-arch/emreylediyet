@@ -36,7 +36,7 @@
           <div>
             <h1 class="text-base md:text-xl font-bold tracking-tight">Hastane Besin Tüketim Kaydı ve Analiz Sistemi</h1>
             <div class="flex items-center flex-wrap gap-2 text-xs text-teal-200 mt-0.5">
-              <span>1.500 Besin | TürKomp, TÜBER & Enteral Klinik Değişim Veritabanı</span>
+              <span>1.550 Besin & 26 Besin Ögesi | TürKomp, TÜBER & Enteral Klinik Değişim Veritabanı</span>
               <span class="bg-teal-900/80 text-amber-300 border border-teal-600/70 px-2.5 py-0.5 rounded-full font-bold tracking-wide">
                 <i class="fa-brands fa-instagram mr-1"></i>@emreyle.diyet
               </span>
@@ -302,11 +302,21 @@
           kalsiyum_mg: Number(f.kalsiyum_mg ?? f["Kalsiyum (mg)"] ?? 0),
           demir_mg: Number(f.demir_mg ?? f["Demir (mg)"] ?? 0),
           cinko_mg: Number(f.cinko_mg ?? f["Çinko (mg)"] ?? 0),
+          magnezyum_mg: Number(f.magnezyum_mg ?? f["Magnezyum (mg)"] ?? 0),
+          fosfor_mg: Number(f.fosfor_mg ?? f["Fosfor (mg)"] ?? 0),
+          selenyum_mcg: Number(f.selenyum_mcg ?? f["Selenyum (mcg)"] ?? 0),
           vitamin_a_mcg: Number(f.vitamin_a_mcg ?? f["Vitamin A (mcg)"] ?? 0),
           vitamin_c_mg: Number(f.vitamin_c_mg ?? f["Vitamin C (mg)"] ?? 0),
+          vitamin_d_mcg: Number(f.vitamin_d_mcg ?? f["D Vitamini (mcg)"] ?? 0),
           vitamin_b1_mg: Number(f.vitamin_b1_mg ?? f["Vitamin B1 (mg)"] ?? 0),
           vitamin_b2_mg: Number(f.vitamin_b2_mg ?? f["Vitamin B2 (mg)"] ?? 0),
-          folat_mcg: Number(f.folat_mcg ?? f["Folat (mcg)"] ?? 0)
+          vitamin_b6_mg: Number(f.vitamin_b6_mg ?? f["B6 Vitamini (mg)"] ?? 0),
+          vitamin_b12_mcg: Number(f.vitamin_b12_mcg ?? f["B12 Vitamini (mcg)"] ?? 0),
+          folat_mcg: Number(f.folat_mcg ?? f["Folat (mcg)"] ?? 0),
+          kolesterol_mg: Number(f.kolesterol_mg ?? f["Kolesterol (mg)"] ?? 0),
+          ilave_seker_g: Number(f.ilave_seker_g ?? f["İlave Şeker (g)"] ?? 0),
+          tekli_doymamis_yag_g: Number(f.tekli_doymamis_yag_g ?? f["Tekli Doymamış Yağ (g)"] ?? 0),
+          coklu_doymamis_yag_g: Number(f.coklu_doymamis_yag_g ?? f["Çoklu Doymamış Yağ (g)"] ?? 0)
         }));
         renderMealsUI();
         hesaplaVeGuncelle();
@@ -360,7 +370,7 @@
               <!-- 2. Giriş Modu: Porsiyon/Değişim vs Net Gramaj -->
               <div class="lg:col-span-3 space-y-1">
                 <div class="flex justify-between items-center">
-                  <label class="text-xs font-bold text-slate-600">Ölçü Birimi</label>
+                  <label class="text-xs font-bold text-slate-600">Ölçü Birimi / Adet</label>
                   <button type="button" onclick="toggleInputMode(${mIdx})" id="mode_toggle_${mIdx}" class="text-[10px] text-teal-700 font-bold underline hover:text-teal-900">
                     Net Grama Geç
                   </button>
@@ -450,6 +460,78 @@
       }
     }
 
+    // Akıllı Adet ve Porsiyon Seçenekleri Oluşturucu
+    function populatePortionOptions(mIdx, food) {
+      const portionSelect = document.getElementById(`food_portion_${mIdx}`);
+      if (!portionSelect || !food) return;
+
+      portionSelect.innerHTML = '';
+      const refG = Number(food.referans_miktar_g) || 100;
+      const sp = String(food.standart_porsiyon || '');
+
+      // Birim ve adet tespiti (Örn: "5 Adet", "4-5 Adet", "1 Dilim", "2 Adet", "6 Sıkım")
+      let unitCount = null;
+      let unitName = "Adet";
+
+      const mRange = sp.match(/(\d+)\s*[-–]\s*(\d+)\s*(Adet|Dilim|Tane|Köfte|Sıkım|Kaşık|Yk|Tatlı Kaşığı|Yemek Kaşığı|Şiş|Kare|Bardak|Kase|Fincan|Kutu)/i);
+      if (mRange) {
+        unitCount = (Number(mRange[1]) + Number(mRange[2])) / 2;
+        unitName = mRange[3];
+      } else {
+        const mSingle = sp.match(/(\d+(?:\.\d+)?)\s*(?:[A-Za-zÇĞİÖŞÜçğıöşü]+\s+)?(Adet|Dilim|Tane|Köfte|Sıkım|Kaşık|Yk|Tatlı Kaşığı|Yemek Kaşığı|Şiş|Kare|Ceviz|Fındık|Zeytin|Yumurta|Pankek|Sarma|Dolma)/i);
+        if (mSingle) {
+          unitCount = Number(mSingle[1]);
+          unitName = mSingle[2];
+        }
+      }
+
+      // Standart Porsiyon ve Değişim Seçenekleri Grubu
+      const grpDegisim = document.createElement('optgroup');
+      grpDegisim.label = "⚖️ Diyetisyen Değişim / Porsiyon";
+
+      const degisimList = [
+        { val: 0.25, lbl: `0.25 Değişim / Çeyrek (${Math.round(refG * 0.25)}g)` },
+        { val: 0.5,  lbl: `0.5 Değişim / Yarım (${Math.round(refG * 0.5)}g)` },
+        { val: 0.75, lbl: `0.75 Değişim (${Math.round(refG * 0.75)}g)` },
+        { val: 1.0,  lbl: `1 Değişim / Standart Porsiyon (${Math.round(refG)}g)`, def: true },
+        { val: 1.5,  lbl: `1.5 Değişim (${Math.round(refG * 1.5)}g)` },
+        { val: 2.0,  lbl: `2 Değişim (${Math.round(refG * 2)}g)` },
+        { val: 2.5,  lbl: `2.5 Değişim (${Math.round(refG * 2.5)}g)` },
+        { val: 3.0,  lbl: `3 Değişim (${Math.round(refG * 3)}g)` },
+        { val: 4.0,  lbl: `4 Değişim (${Math.round(refG * 4)}g)` },
+        { val: 5.0,  lbl: `5 Değişim (${Math.round(refG * 5)}g)` }
+      ];
+
+      degisimList.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.val;
+        opt.textContent = item.lbl;
+        if (item.def) opt.selected = true;
+        grpDegisim.appendChild(opt);
+      });
+      portionSelect.appendChild(grpDegisim);
+
+      // Adet / Tane Bazlı Seçenekler Grubu (Eğer besin adet/tane ile sayılabiliyorsa)
+      if (unitCount && unitCount > 0) {
+        const grpAdet = document.createElement('optgroup');
+        grpAdet.label = `🔢 ${unitName} Bazlı Seçim (1 Değişim = ${sp})`;
+
+        const adetSayilari = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 18, 20];
+        adetSayilari.forEach(count => {
+          const multiplier = count / unitCount;
+          const gramVal = Math.round((refG / unitCount) * count);
+          const opt = document.createElement('option');
+          opt.value = multiplier.toFixed(4);
+          opt.textContent = `${count} ${unitName} (${gramVal}g / ${multiplier.toFixed(2)} Değişim)`;
+          grpAdet.appendChild(opt);
+        });
+        portionSelect.appendChild(grpAdet);
+      }
+
+      // Her yeni besin seçildiğinde mutlaka 1 Standart Değişim seçili kalır!
+      portionSelect.value = "1";
+    }
+
     // When food selection changes, update the label showing what 1 Portion equals
     function foodSelectedChanged(mIdx) {
       const select = document.getElementById(`food_select_${mIdx}`);
@@ -461,6 +543,7 @@
       if (food && label) {
         label.textContent = `1 Değişim = ${food.standart_porsiyon} (${food.referans_miktar_g}g)`;
         if (gramInput) gramInput.value = food.referans_miktar_g;
+        populatePortionOptions(mIdx, food);
       }
     }
 
@@ -582,9 +665,14 @@
       const yuzde = Number(document.getElementById(`food_pct_${mIdx}`).value) || 100;
 
       if (mode === 'portion') {
-        const porsiyonCarpani = Number(document.getElementById(`food_portion_${mIdx}`).value) || 1;
+        const portionSelect = document.getElementById(`food_portion_${mIdx}`);
+        const porsiyonCarpani = Number(portionSelect?.value) || 1;
         netMiktarG = food.referans_miktar_g * porsiyonCarpani;
-        olcuTanimi = `${porsiyonCarpani} Porsiyon (${Math.round(netMiktarG)}g)`;
+
+        // Seçenek metninden okunabilir adet ve gramajı al
+        const selectedOptText = portionSelect?.options[portionSelect.selectedIndex]?.text || '';
+        olcuTanimi = selectedOptText || `${porsiyonCarpani} Değişim (${Math.round(netMiktarG)}g)`;
+
         // Veritabanındaki değerler zaten 1 standart porsiyon için olduğundan:
         carpim = porsiyonCarpani * (yuzde / 100);
       } else {
@@ -606,23 +694,37 @@
         protein_g: food.protein_g * carpim,
         yag_g: food.yag_g * carpim,
         doymus_yag_g: food.doymus_yag_g * carpim,
+        tekli_doymamis_yag_g: (food.tekli_doymamis_yag_g || 0) * carpim,
+        coklu_doymamis_yag_g: (food.coklu_doymamis_yag_g || 0) * carpim,
+        kolesterol_mg: (food.kolesterol_mg || 0) * carpim,
         karbonhidrat_g: food.karbonhidrat_g * carpim,
+        ilave_seker_g: (food.ilave_seker_g || 0) * carpim,
         lif_g: food.lif_g * carpim,
         sodyum_mg: food.sodyum_mg * carpim,
         potasyum_mg: food.potasyum_mg * carpim,
         kalsiyum_mg: food.kalsiyum_mg * carpim,
+        magnezyum_mg: (food.magnezyum_mg || 0) * carpim,
+        fosfor_mg: (food.fosfor_mg || 0) * carpim,
         demir_mg: food.demir_mg * carpim,
         cinko_mg: food.cinko_mg * carpim,
+        selenyum_mcg: (food.selenyum_mcg || 0) * carpim,
         vitamin_a_mcg: food.vitamin_a_mcg * carpim,
         vitamin_c_mg: food.vitamin_c_mg * carpim,
+        vitamin_d_mcg: (food.vitamin_d_mcg || 0) * carpim,
         vitamin_b1_mg: food.vitamin_b1_mg * carpim,
         vitamin_b2_mg: food.vitamin_b2_mg * carpim,
+        vitamin_b6_mg: (food.vitamin_b6_mg || 0) * carpim,
+        vitamin_b12_mcg: (food.vitamin_b12_mcg || 0) * carpim,
         folat_mcg: food.folat_mcg * carpim
       };
 
       tuketimListesi[mealName].push(item);
       renderMealItems(mIdx);
       hesaplaVeGuncelle();
+
+      // Besin eklendikten sonra porsiyon seçimi daima 1 Standart Değişime sıfırlanır
+      const portionSelectEl = document.getElementById(`food_portion_${mIdx}`);
+      if (portionSelectEl) portionSelectEl.value = "1";
     }
 
     function ogundenSil(mIdx, itemIdx) {
@@ -668,9 +770,12 @@
     // Engine: Calculate Totals & Update Analytics
     function hesaplaVeGuncelle() {
       let totals = {
-        enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, karbonhidrat_g: 0, lif_g: 0,
-        sodyum_mg: 0, potasyum_mg: 0, kalsiyum_mg: 0, demir_mg: 0, cinko_mg: 0,
-        vitamin_a_mcg: 0, vitamin_c_mg: 0, vitamin_b1_mg: 0, vitamin_b2_mg: 0, folat_mcg: 0
+        enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, tekli_doymamis_yag_g: 0, coklu_doymamis_yag_g: 0,
+        kolesterol_mg: 0, karbonhidrat_g: 0, ilave_seker_g: 0, lif_g: 0,
+        sodyum_mg: 0, potasyum_mg: 0, kalsiyum_mg: 0, magnezyum_mg: 0, fosfor_mg: 0,
+        demir_mg: 0, cinko_mg: 0, selenyum_mcg: 0,
+        vitamin_a_mcg: 0, vitamin_c_mg: 0, vitamin_d_mcg: 0, vitamin_b1_mg: 0, vitamin_b2_mg: 0,
+        vitamin_b6_mg: 0, vitamin_b12_mcg: 0, folat_mcg: 0
       };
 
       MEALS.forEach(m => {
@@ -725,16 +830,26 @@
 
       // Micro table
       const rows = [
-        ["Doymuş Yağ", totals.doymus_yag_g.toFixed(2), "g", "Kardiyak risk izlemi"],
+        ["Doymuş Yağ", totals.doymus_yag_g.toFixed(2), "g", "Kardiyak & lipid izlemi"],
+        ["Tekli Doymamış Yağ (MUFA)", totals.tekli_doymamis_yag_g.toFixed(2), "g", "Damar sağlığı & kardiyoprotektif"],
+        ["Çoklu Doymamış Yağ (PUFA)", totals.coklu_doymamis_yag_g.toFixed(2), "g", "Hücre zarı & esansiyel yağ asitleri"],
+        ["Kolesterol", totals.kolesterol_mg.toFixed(1), "mg", "Kardiyovasküler diyet kısıtlaması"],
+        ["İlave Şeker", totals.ilave_seker_g.toFixed(1), "g", "Glisemik kontrol & insülin direnci"],
         ["Sodyum (Na)", totals.sodyum_mg.toFixed(1), "mg", "Tansiyon & ödem kontrolü"],
         ["Potasyum (K)", totals.potasyum_mg.toFixed(1), "mg", "Renal & elektrolit dengesi"],
-        ["Kalsiyum (Ca)", totals.kalsiyum_mg.toFixed(1), "mg", "Kemik & kas fonksiyonu"],
-        ["Demir (Fe)", totals.demir_mg.toFixed(2), "mg", "Anemi & hemoglobin takibi"],
-        ["Çinko (Zn)", totals.cinko_mg.toFixed(2), "mg", "Yara iyileşmesi & immünite"],
+        ["Kalsiyum (Ca)", totals.kalsiyum_mg.toFixed(1), "mg", "Kemik bütünlüğü & nöromusküler iletim"],
+        ["Magnezyum (Mg)", totals.magnezyum_mg.toFixed(1), "mg", "Kas krampları & enzim kofaktörü"],
+        ["Fosfor (P)", totals.fosfor_mg.toFixed(1), "mg", "Kemik mineralizasyonu & renal diyet"],
+        ["Demir (Fe)", totals.demir_mg.toFixed(2), "mg", "Anemi & hemoglobin sentezi"],
+        ["Çinko (Zn)", totals.cinko_mg.toFixed(2), "mg", "Yara iyileşmesi & immün yanıt"],
+        ["Selenyum (Se)", totals.selenyum_mcg.toFixed(1), "mcg", "Antioksidan savunma & tiroit metabolizması"],
         ["Vitamin A", totals.vitamin_a_mcg.toFixed(1), "mcg", "Epitel & görme fonksiyonu"],
-        ["Vitamin C", totals.vitamin_c_mg.toFixed(1), "mg", "Antioksidan & doku onarımı"],
-        ["Vitamin B1 (Tiamin)", totals.vitamin_b1_mg.toFixed(2), "mg", "Karbonhidrat metabolizması"],
-        ["Vitamin B2 (Riboflavin)", totals.vitamin_b2_mg.toFixed(2), "mg", "Hücresel enerji döngüsü"],
+        ["Vitamin C", totals.vitamin_c_mg.toFixed(1), "mg", "Antioksidan, doku onarımı & kolajen"],
+        ["D Vitamini", totals.vitamin_d_mcg.toFixed(1), "mcg", "Kalsiyum emilimi & immün sistem"],
+        ["Vitamin B1 (Tiamin)", totals.vitamin_b1_mg.toFixed(2), "mg", "Karbonhidrat metabolizması & sinir sistemi"],
+        ["Vitamin B2 (Riboflavin)", totals.vitamin_b2_mg.toFixed(2), "mg", "Hücresel enerji döngüsü & FAD sentezi"],
+        ["Vitamin B6 (Piridoksin)", totals.vitamin_b6_mg.toFixed(2), "mg", "Protein metabolizması & nörotransmiterler"],
+        ["Vitamin B12 (Kobalamin)", totals.vitamin_b12_mcg.toFixed(2), "mcg", "Eritrosit matürasyonu & nörolojik sağlık"],
         ["Folat (Vitamin B9)", totals.folat_mcg.toFixed(1), "mcg", "Eritrosit & DNA sentezi"]
       ];
 
@@ -782,9 +897,12 @@
 
       // Totals calculation
       let totals = {
-        enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, karbonhidrat_g: 0, lif_g: 0,
-        sodyum_mg: 0, potasyum_mg: 0, kalsiyum_mg: 0, demir_mg: 0, cinko_mg: 0,
-        vitamin_a_mcg: 0, vitamin_c_mg: 0, vitamin_b1_mg: 0, vitamin_b2_mg: 0, folat_mcg: 0
+        enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, tekli_doymamis_yag_g: 0, coklu_doymamis_yag_g: 0,
+        kolesterol_mg: 0, karbonhidrat_g: 0, ilave_seker_g: 0, lif_g: 0,
+        sodyum_mg: 0, potasyum_mg: 0, kalsiyum_mg: 0, magnezyum_mg: 0, fosfor_mg: 0,
+        demir_mg: 0, cinko_mg: 0, selenyum_mcg: 0,
+        vitamin_a_mcg: 0, vitamin_c_mg: 0, vitamin_d_mcg: 0, vitamin_b1_mg: 0, vitamin_b2_mg: 0,
+        vitamin_b6_mg: 0, vitamin_b12_mcg: 0, folat_mcg: 0
       };
 
       const mealItemsRows = [];
@@ -882,12 +1000,17 @@
       doc.text("Alinan Tum Mikro Besin Ogeleri ve Mineraller", 14, doc.lastAutoTable.finalY + 6.5);
 
       const microData = [
-        ["Doymus Yag", `${totals.doymus_yag_g.toFixed(2)} g`, "Cinko (Zn)", `${totals.cinko_mg.toFixed(2)} mg`],
-        ["Sodyum (Na)", `${totals.sodyum_mg.toFixed(1)} mg`, "Vitamin A", `${totals.vitamin_a_mcg.toFixed(1)} mcg`],
-        ["Potasyum (K)", `${totals.potasyum_mg.toFixed(1)} mg`, "Vitamin C", `${totals.vitamin_c_mg.toFixed(1)} mg`],
-        ["Kalsiyum (Ca)", `${totals.kalsiyum_mg.toFixed(1)} mg`, "Vitamin B1 (Tiamin)", `${totals.vitamin_b1_mg.toFixed(2)} mg`],
-        ["Demir (Fe)", `${totals.demir_mg.toFixed(2)} mg`, "Vitamin B2 (Riboflavin)", `${totals.vitamin_b2_mg.toFixed(2)} mg`],
-        ["Folat (Vit B9)", `${totals.folat_mcg.toFixed(1)} mcg`, "Lif (Posa Toplami)", `${totals.lif_g.toFixed(1)} g`]
+        ["Doymus Yag", `${totals.doymus_yag_g.toFixed(2)} g`, "Vitamin A", `${totals.vitamin_a_mcg.toFixed(1)} mcg`],
+        ["Tekli Doymamis Yag (MUFA)", `${totals.tekli_doymamis_yag_g.toFixed(2)} g`, "Vitamin C", `${totals.vitamin_c_mg.toFixed(1)} mg`],
+        ["Coklu Doymamis Yag (PUFA)", `${totals.coklu_doymamis_yag_g.toFixed(2)} g`, "D Vitamini", `${totals.vitamin_d_mcg.toFixed(1)} mcg`],
+        ["Kolesterol", `${totals.kolesterol_mg.toFixed(1)} mg`, "Vitamin B1 (Tiamin)", `${totals.vitamin_b1_mg.toFixed(2)} mg`],
+        ["Ilave Seker", `${totals.ilave_seker_g.toFixed(1)} g`, "Vitamin B2 (Riboflavin)", `${totals.vitamin_b2_mg.toFixed(2)} mg`],
+        ["Sodyum (Na)", `${totals.sodyum_mg.toFixed(1)} mg`, "Vitamin B6 (Piridoksin)", `${totals.vitamin_b6_mg.toFixed(2)} mg`],
+        ["Potasyum (K)", `${totals.potasyum_mg.toFixed(1)} mg`, "Vitamin B12 (Kobalamin)", `${totals.vitamin_b12_mcg.toFixed(2)} mcg`],
+        ["Kalsiyum (Ca)", `${totals.kalsiyum_mg.toFixed(1)} mg`, "Folat (Vit B9)", `${totals.folat_mcg.toFixed(1)} mcg`],
+        ["Magnezyum (Mg)", `${totals.magnezyum_mg.toFixed(1)} mg`, "Cinko (Zn)", `${totals.cinko_mg.toFixed(2)} mg`],
+        ["Fosfor (P)", `${totals.fosfor_mg.toFixed(1)} mg`, "Selenyum (Se)", `${totals.selenyum_mcg.toFixed(1)} mcg`],
+        ["Demir (Fe)", `${totals.demir_mg.toFixed(2)} mg`, "Lif (Posa Toplami)", `${totals.lif_g.toFixed(1)} g`]
       ];
 
       doc.autoTable({
@@ -921,9 +1044,12 @@
       const hPro = document.getElementById('hedefProtein').value || 0;
 
       let totals = {
-        enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, karbonhidrat_g: 0, lif_g: 0,
-        sodyum_mg: 0, potasyum_mg: 0, kalsiyum_mg: 0, demir_mg: 0, cinko_mg: 0,
-        vitamin_a_mcg: 0, vitamin_c_mg: 0, vitamin_b1_mg: 0, vitamin_b2_mg: 0, folat_mcg: 0
+        enerji_kcal: 0, protein_g: 0, yag_g: 0, doymus_yag_g: 0, tekli_doymamis_yag_g: 0, coklu_doymamis_yag_g: 0,
+        kolesterol_mg: 0, karbonhidrat_g: 0, ilave_seker_g: 0, lif_g: 0,
+        sodyum_mg: 0, potasyum_mg: 0, kalsiyum_mg: 0, magnezyum_mg: 0, fosfor_mg: 0,
+        demir_mg: 0, cinko_mg: 0, selenyum_mcg: 0,
+        vitamin_a_mcg: 0, vitamin_c_mg: 0, vitamin_d_mcg: 0, vitamin_b1_mg: 0, vitamin_b2_mg: 0,
+        vitamin_b6_mg: 0, vitamin_b12_mcg: 0, folat_mcg: 0
       };
 
       MEALS.forEach(m => {
@@ -935,17 +1061,18 @@
       // Prepare Single Row Thesis/SPSS format
       const headerRow = [
         "Hasta_Kodu", "Servis", "Hedef_Kcal", "Hedef_Protein",
-        "Toplam_Enerji_kcal", "Karbonhidrat_g", "Protein_g", "Yag_g", "Doymus_Yag_g", "Lif_g",
-        "Sodyum_mg", "Potasyum_mg", "Kalsiyum_mg", "Demir_mg", "Cinko_mg",
-        "VitA_mcg", "VitC_mg", "VitB1_mg", "VitB2_mg", "Folat_mcg"
+        "Toplam_Enerji_kcal", "Karbonhidrat_g", "Protein_g", "Yag_g", "Doymus_Yag_g",
+        "Tekli_Doymamis_Yag_g", "Coklu_Doymamis_Yag_g", "Kolesterol_mg", "Ilave_Seker_g", "Lif_g",
+        "Sodyum_mg", "Potasyum_mg", "Kalsiyum_mg", "Magnezyum_mg", "Fosfor_mg", "Demir_mg", "Cinko_mg", "Selenyum_mcg",
+        "VitA_mcg", "VitC_mg", "VitD_mcg", "VitB1_mg", "VitB2_mg", "VitB6_mg", "VitB12_mcg", "Folat_mcg"
       ];
 
       const valRow = [
         `"${hasta}"`, `"${servis}"`, hKcal, hPro,
-        totals.enerji_kcal.toFixed(2), totals.karbonhidrat_g.toFixed(2), totals.protein_g.toFixed(2), totals.yag_g.toFixed(2),
-        totals.doymus_yag_g.toFixed(2), totals.lif_g.toFixed(2), totals.sodyum_mg.toFixed(1), totals.potasyum_mg.toFixed(1),
-        totals.kalsiyum_mg.toFixed(1), totals.demir_mg.toFixed(2), totals.cinko_mg.toFixed(2), totals.vitamin_a_mcg.toFixed(1),
-        totals.vitamin_c_mg.toFixed(2), totals.vitamin_b1_mg.toFixed(2), totals.vitamin_b2_mg.toFixed(2), totals.folat_mcg.toFixed(1)
+        totals.enerji_kcal.toFixed(2), totals.karbonhidrat_g.toFixed(2), totals.protein_g.toFixed(2), totals.yag_g.toFixed(2), totals.doymus_yag_g.toFixed(2),
+        totals.tekli_doymamis_yag_g.toFixed(2), totals.coklu_doymamis_yag_g.toFixed(2), totals.kolesterol_mg.toFixed(1), totals.ilave_seker_g.toFixed(1), totals.lif_g.toFixed(2),
+        totals.sodyum_mg.toFixed(1), totals.potasyum_mg.toFixed(1), totals.kalsiyum_mg.toFixed(1), totals.magnezyum_mg.toFixed(1), totals.fosfor_mg.toFixed(1), totals.demir_mg.toFixed(2), totals.cinko_mg.toFixed(2), totals.selenyum_mcg.toFixed(1),
+        totals.vitamin_a_mcg.toFixed(1), totals.vitamin_c_mg.toFixed(2), totals.vitamin_d_mcg.toFixed(2), totals.vitamin_b1_mg.toFixed(2), totals.vitamin_b2_mg.toFixed(2), totals.vitamin_b6_mg.toFixed(2), totals.vitamin_b12_mcg.toFixed(2), totals.folat_mcg.toFixed(1)
       ];
 
       const csvContent = "\uFEFF" + headerRow.join(",") + "\n" + valRow.join(",");
