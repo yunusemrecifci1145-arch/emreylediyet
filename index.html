@@ -804,7 +804,7 @@
             <span class="text-teal-800 font-semibold ml-1.5 bg-teal-100/60 px-2 py-0.5 rounded">${item.olcu_tanimi}</span>
             <span class="text-slate-500 ml-1">(%${item.tuketim_yuzdesi} tüketildi)</span>
             <span class="text-[11px] text-slate-600 block font-medium mt-1">
-              <b>${item.enerji_kcal.toFixed(1)}</b> kcal | <b>${item.protein_g.toFixed(1)}g</b> Pro | <b>${item.karbonhidrat_g.toFixed(1)}g</b> Karb | <b>${item.yag_g.toFixed(1)}g</b> Yağ
+              <b>${item.enerji_kcal.toFixed(1)}</b> kcal | <b>${item.karbonhidrat_g.toFixed(1)}g</b> Karb | <b>${item.protein_g.toFixed(1)}g</b> Pro | <b>${item.yag_g.toFixed(1)}g</b> Yağ
             </span>
           </div>
           <button onclick="ogundenSil(${mIdx}, ${idx})" class="text-rose-600 hover:text-rose-800 font-bold px-2 py-1 rounded hover:bg-rose-50 transition">
@@ -977,8 +977,8 @@
             item.olcu_tanimi,
             `%${item.tuketim_yuzdesi}`,
             item.enerji_kcal.toFixed(1),
-            item.protein_g.toFixed(1),
             item.karbonhidrat_g.toFixed(1),
+            item.protein_g.toFixed(1),
             item.yag_g.toFixed(1)
           ]);
         });
@@ -1047,7 +1047,7 @@
 
       doc.autoTable({
         startY: doc.lastAutoTable.finalY + 8.5,
-        head: [["Öğün", "Besin / Ürün Adı", "Değişim / Porsiyon", "Tüketim %", "Enerji (kcal)", "Protein (g)", "Karb (g)", "Yağ (g)"]],
+        head: [["Öğün", "Besin / Ürün Adı", "Değişim / Porsiyon", "Tüketim %", "Enerji (kcal)", "Karb (g)", "Protein (g)", "Yağ (g)"]],
         body: mealItemsRows,
         theme: "striped",
         styles: { font: "DejaVuSans", fontSize: 8, cellPadding: 1.5 },
@@ -1142,7 +1142,7 @@
       XLSX.utils.book_append_sheet(wb, wsOzet, "Besin_Analiz_Ozeti");
 
       const besinData = [
-        ["Öğün", "Besin Adı", "Ölçü / Değişim", "Tüketim %", "Enerji (kcal)", "Protein (g)", "Karb (g)", "Yağ (g)", "Lif (g)"]
+        ["Öğün", "Besin Adı", "Ölçü / Değişim", "Tüketim %", "Enerji (kcal)", "Karb (g)", "Protein (g)", "Yağ (g)", "Lif (g)"]
       ];
 
       MEALS.forEach(m => {
@@ -1153,8 +1153,8 @@
             item.olcu_tanimi,
             item.tuketim_yuzdesi,
             Number(item.enerji_kcal.toFixed(1)),
-            Number(item.protein_g.toFixed(1)),
             Number(item.karbonhidrat_g.toFixed(1)),
+            Number(item.protein_g.toFixed(1)),
             Number(item.yag_g.toFixed(1)),
             Number(item.lif_g.toFixed(1))
           ]);
