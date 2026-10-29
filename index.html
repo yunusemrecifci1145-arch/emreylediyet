@@ -425,6 +425,78 @@
       }
     }
 
+    
+    function getHastanePorsiyonu(food) {
+      if (!food) return null;
+      const cat = trNormalize(food.kategori || "");
+      const name = trNormalize(food.besin_adi || "");
+      const refG = Number(food.referans_miktar_g) || 100;
+
+      let hGram = null;
+      let aciklama = "1 Servis";
+
+      // 1. Pilavlar, Makarnalar, Erişteler (Hastanede 130g servis)
+      if (cat.includes("pilav") || cat.includes("tahil") || cat.includes("makarna") || cat.includes("eriste") || name.includes("pilav") || name.includes("makarna") || name.includes("bulgur") || name.includes("kuskus")) {
+        hGram = 130;
+        aciklama = "1 Kepçe / 4-5 YK";
+      }
+      // 2. Çorbalar (Hastanede 1 kepçe ~ 200g)
+      else if (cat.includes("corba") || name.includes("corba")) {
+        hGram = 200;
+        aciklama = "1 Küçük Kase / 1 Kepçe";
+      }
+      // 3. Kuru Baklagil Yemekleri (Kuru fasulye, nohut, mercimek vb. ~180g)
+      else if (cat.includes("baklagil") || name.includes("fasulye") || name.includes("nohut") || name.includes("barbunya") || name.includes("mercimek")) {
+        hGram = 180;
+        aciklama = "1 Tabak / 1 Kepçe";
+      }
+      // 4. Sebze & Zeytinyağlı Yemekleri (180g)
+      else if (cat.includes("sebze") || cat.includes("zeytinyagli")) {
+        hGram = 180;
+        aciklama = "1 Hastane Servis Tabağı";
+      }
+      // 5. Et, Tavuk, Balık Yemekleri (120g)
+      else if (cat.includes("et") || cat.includes("tavuk") || cat.includes("balik") || name.includes("kofte") || name.includes("tavuk") || name.includes("haslama")) {
+        hGram = 120;
+        aciklama = "1 Porsiyon Ana Yemek";
+      }
+      // 6. Yoğurt & Cacık (150g)
+      else if (name.includes("yogurt") || name.includes("cacik") || cat.includes("sut")) {
+        hGram = 150;
+        aciklama = "1 Kase / Kutu";
+      }
+      // 7. Komposto & Hoşaf (160g)
+      else if (name.includes("komposto") || name.includes("hosaf")) {
+        hGram = 160;
+        aciklama = "1 Komposto Kasesi";
+      }
+      // 8. Salatalar (120g)
+      else if (name.includes("salata") || name.includes("sogus")) {
+        hGram = 120;
+        aciklama = "1 Salata Tabağı";
+      }
+      // 9. Börekler & Hamur İşleri (130g)
+      else if (cat.includes("borek") || name.includes("borek")) {
+        hGram = 130;
+        aciklama = "1 Küçük Dilim";
+      }
+      // Diğer durumlarda refG > 150 ise %75'i
+      else if (refG > 150) {
+        hGram = Math.round(refG * 0.75);
+        aciklama = "1 Klinik Servis Ölçüsü";
+      } else {
+        hGram = refG;
+        aciklama = "Standart Servis";
+      }
+
+      const multiplier = hGram / refG;
+      return {
+        gram: hGram,
+        multiplier: Number(multiplier.toFixed(4)),
+        aciklama: aciklama
+      };
+    }
+
     function populatePortionOptions(mIdx, food) {
       const portionSelect = document.getElementById(`food_portion_${mIdx}`);
       if (!portionSelect || !food) return;
@@ -432,7 +504,55 @@
       portionSelect.innerHTML = '';
       const refG = Number(food.referans_miktar_g) || 100;
       const sp = String(food.standart_porsiyon || '');
+      const hInfo = getHastanePorsiyonu(food);
 
+      // 1. EN BAŞTA: 🏥 HASTANE MENÜSÜ STANDART SERVİS SEÇENEKLERİ
+      if (hInfo) {
+        const grpHastane = document.createElement('optgroup');
+        grpHastane.label = "🏥 Hastane Menüsü Servis Porsiyonu";
+
+        const optH = document.createElement('option');
+        optH.value = hInfo.multiplier;
+        optH.textContent = `🏥 Hastane Standart Porsiyonu (${hInfo.gram}g - ${hInfo.aciklama})`;
+        optH.selected = true;
+        grpHastane.appendChild(optH);
+
+        if (hInfo.gram >= 80) {
+          const optHYarim = document.createElement('option');
+          optHYarim.value = (hInfo.multiplier * 0.5).toFixed(4);
+          optHYarim.textContent = `🏥 Hastane Yarım Porsiyon (${Math.round(hInfo.gram * 0.5)}g)`;
+          grpHastane.appendChild(optHYarim);
+        }
+
+        portionSelect.appendChild(grpHastane);
+      }
+
+      // 2. DİYETİSYEN DEĞİŞİM / STANDART PORSIYON
+      const grpDegisim = document.createElement('optgroup');
+      grpDegisim.label = "⚖️ Diyetisyen Değişim / Standart Porsiyon";
+
+      const degisimList = [
+        { val: 0.25, lbl: `0.25 Değişim / Çeyrek (${Math.round(refG * 0.25)}g)` },
+        { val: 0.5,  lbl: `0.5 Değişim / Yarım (${Math.round(refG * 0.5)}g)` },
+        { val: 0.75, lbl: `0.75 Değişim (${Math.round(refG * 0.75)}g)` },
+        { val: 1.0,  lbl: `1 Tam Değişim / Standart (${Math.round(refG)}g)` },
+        { val: 1.5,  lbl: `1.5 Değişim (${Math.round(refG * 1.5)}g)` },
+        { val: 2.0,  lbl: `2 Değişim (${Math.round(refG * 2)}g)` },
+        { val: 2.5,  lbl: `2.5 Değişim (${Math.round(refG * 2.5)}g)` },
+        { val: 3.0,  lbl: `3 Değişim (${Math.round(refG * 3)}g)` },
+        { val: 4.0,  lbl: `4 Değişim (${Math.round(refG * 4)}g)` },
+        { val: 5.0,  lbl: `5 Değişim (${Math.round(refG * 5)}g)` }
+      ];
+
+      degisimList.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.val;
+        opt.textContent = item.lbl;
+        grpDegisim.appendChild(opt);
+      });
+      portionSelect.appendChild(grpDegisim);
+
+      // 3. ADET BAZLI SEÇENEKLER
       let unitCount = null;
       let unitName = "Adet";
 
@@ -447,31 +567,6 @@
           unitName = mSingle[2];
         }
       }
-
-      const grpDegisim = document.createElement('optgroup');
-      grpDegisim.label = "⚖️ Diyetisyen Değişim / Porsiyon";
-
-      const degisimList = [
-        { val: 0.25, lbl: `0.25 Değişim / Çeyrek (${Math.round(refG * 0.25)}g)` },
-        { val: 0.5,  lbl: `0.5 Değişim / Yarım (${Math.round(refG * 0.5)}g)` },
-        { val: 0.75, lbl: `0.75 Değişim (${Math.round(refG * 0.75)}g)` },
-        { val: 1.0,  lbl: `1 Değişim / Standart Porsiyon (${Math.round(refG)}g)`, def: true },
-        { val: 1.5,  lbl: `1.5 Değişim (${Math.round(refG * 1.5)}g)` },
-        { val: 2.0,  lbl: `2 Değişim (${Math.round(refG * 2)}g)` },
-        { val: 2.5,  lbl: `2.5 Değişim (${Math.round(refG * 2.5)}g)` },
-        { val: 3.0,  lbl: `3 Değişim (${Math.round(refG * 3)}g)` },
-        { val: 4.0,  lbl: `4 Değişim (${Math.round(refG * 4)}g)` },
-        { val: 5.0,  lbl: `5 Değişim (${Math.round(refG * 5)}g)` }
-      ];
-
-      degisimList.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item.val;
-        opt.textContent = item.lbl;
-        if (item.def) opt.selected = true;
-        grpDegisim.appendChild(opt);
-      });
-      portionSelect.appendChild(grpDegisim);
 
       if (unitCount && unitCount > 0) {
         const grpAdet = document.createElement('optgroup');
@@ -489,7 +584,12 @@
         portionSelect.appendChild(grpAdet);
       }
 
-      portionSelect.value = "1";
+      // Varsayılan olarak her zaman en üstteki Hastane Porsiyonu seçili olur!
+      if (hInfo) {
+        portionSelect.value = String(hInfo.multiplier);
+      } else {
+        portionSelect.value = "1";
+      }
     }
 
     function foodSelectedChanged(mIdx) {
@@ -500,8 +600,10 @@
       const gramInput = document.getElementById(`food_gram_${mIdx}`);
 
       if (food && label) {
-        label.textContent = `1 Değişim = ${food.standart_porsiyon} (${food.referans_miktar_g}g)`;
-        if (gramInput) gramInput.value = food.referans_miktar_g;
+        const hInfo = getHastanePorsiyonu(food);
+        const defaultGram = hInfo ? hInfo.gram : food.referans_miktar_g;
+        label.textContent = `🏥 Hastane: ${defaultGram}g (Değişim: ${food.referans_miktar_g}g)`;
+        if (gramInput) gramInput.value = defaultGram;
         populatePortionOptions(mIdx, food);
       }
     }
@@ -666,7 +768,11 @@
       hesaplaVeGuncelle();
 
       const portionSelectEl = document.getElementById(`food_portion_${mIdx}`);
-      if (portionSelectEl) portionSelectEl.value = "1";
+      if (portionSelectEl && food) {
+        const hInfo = getHastanePorsiyonu(food);
+        if (hInfo) portionSelectEl.value = String(hInfo.multiplier);
+        else portionSelectEl.value = "1";
+      }
     }
 
     function ogundenSil(mIdx, itemIdx) {
