@@ -173,7 +173,7 @@
           </div>
         </div>
 
-        <!-- YENİ: Eklenen Besinler ve Makro Dökümü Tablosu -->
+        <!-- Eklenen Besinler ve Makro Dökümü Tablosu -->
         <div class="space-y-2">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
@@ -257,7 +257,7 @@
 
       </section>
 
-      <!-- 4. YENİ: Bulamadığınız Besini Bildirin Kartı -->
+      <!-- 4. Bulamadığınız Besini Bildirin Kartı -->
       <section class="bg-gradient-to-r from-teal-50 to-slate-50 p-5 rounded-2xl border border-teal-200 shadow-sm">
         <div class="max-w-3xl">
           <h2 class="text-sm md:text-base font-bold text-teal-900 flex items-center space-x-2 mb-1.5">
@@ -299,8 +299,8 @@
   </footer>
 
   <script>
-    // Web3Forms Doğrudan Entegre Access Key
-    const WEB3FORMS_ACCESS_KEY = "D4cc88a7-e28b-4dc7-8d0e-4aebffd49d28";
+    // Web3Forms API Anahtarı
+    const WEB3FORMS_ACCESS_KEY = "d4cc88a7-e28b-4dc7-8d0e-4aebffd49d28";
 
     const MEALS = [
       "Kahvaltı", 
@@ -318,7 +318,7 @@
       "Öğle Yemeği": [],
       "İkindi (Ara 2)": [],
       "Akşam Yemeği": [],
-      "Gece (Ara 3)": []
+      "Gece (Ara 3)"
     };
 
     let cachedTurkishFont = null;
@@ -379,13 +379,18 @@
           tekli_doymamis_yag_g: Number(f.tekli_doymamis_yag_g ?? f["Tekli Doymamış Yağ (g)"] ?? 0),
           coklu_doymamis_yag_g: Number(f.coklu_doymamis_yag_g ?? f["Çoklu Doymamış Yağ (g)"] ?? 0)
         }));
-        renderMealsUI();
+        
+        // Veri başarıyla gelince tüm seçim kutularını güncelle
+        MEALS.forEach((_, idx) => filterFoodDropdown(idx));
         hesaplaVeGuncelle();
       } catch (err) {
         console.error("foods_1500.json yüklenemedi:", err);
-        const container = document.getElementById('mealsContainer');
-        if (container) {
-          container.innerHTML = '<div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-semibold">⚠️ Besin veritabanı (foods_1500.json) yüklenirken bir sorun oluştu. Lütfen sayfayı yenileyiniz.</div>';
+        const mealsNotice = document.getElementById('mealsContainer');
+        if (mealsNotice) {
+          const warn = document.createElement('div');
+          warn.className = "p-4 bg-amber-50 border border-amber-300 rounded-xl text-amber-900 text-xs font-semibold mb-3";
+          warn.innerHTML = "⚠️ <b>Uyarı:</b> Besin veritabanı dosyası (<code>foods_1500.json</code>) bulunamadı. Lütfen dosyanın Vercel projenizde <code>index.html</code> ile yan yana yüklendiğinden emin olunuz.";
+          mealsNotice.prepend(warn);
         }
       }
     }
@@ -422,6 +427,7 @@
                          class="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-600 mb-1">
                 </div>
                 <select id="food_select_${mIdx}" onchange="foodSelectedChanged(${mIdx})" class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white font-medium">
+                  <option value="">Besin veritabanı yükleniyor...</option>
                 </select>
               </div>
 
@@ -470,7 +476,6 @@
           </div>
         `;
         container.appendChild(wrap);
-        filterFoodDropdown(mIdx);
       });
     }
 
@@ -500,14 +505,13 @@
       }
     }
 
-    // SADECE VE SADECE GERÇEK TABLDOT & SICAK ANA YEMEKLERİ İÇİN HASTANE / TABLDOT PORSIYONU ÜRETİLİR
+    // Gerçek tabldot ve yemekler için porsiyonlama
     function getHastanePorsiyonu(food) {
       if (!food) return null;
       const cat = trNormalize(food.kategori || "");
       const name = trNormalize(food.besin_adi || "");
       const refG = Number(food.referans_miktar_g) || 100;
 
-      // 1. KESİNLİKLE TABLDOT PORSIYONU ÇIKMAYACAK TEMEL BESİNLER
       if (
         cat.includes("ekmek") || name.includes("ekmek") || name.includes("roll") || name.includes("simit") || name.includes("pogaca") ||
         cat.includes("peynir") || cat.includes("sut") || cat.includes("meyve") || cat.includes("kuruyemis") ||
@@ -520,7 +524,6 @@
       let hGram = null;
       let aciklama = "1 Servis";
 
-      // 2. TABLDOT VE SICAK/SOĞUK YEMEKLER
       if (cat.includes("corba") || name.includes("corba")) {
         hGram = 200;
         aciklama = "1 Kase / 1 Kepçe";
@@ -574,7 +577,6 @@
       const sp = String(food.standart_porsiyon || '');
       const hInfo = getHastanePorsiyonu(food);
 
-      // 1. EĞER GERÇEK BİR TABLDOT / SICAK YEMEK İSE
       if (hInfo) {
         const grpHastane = document.createElement('optgroup');
         grpHastane.label = "🏥 Standart Menü Servis Porsiyonu";
@@ -595,7 +597,6 @@
         portionSelect.appendChild(grpHastane);
       }
 
-      // 2. DİYETİSYEN DEĞİŞİM / STANDART PORSIYON
       const grpDegisim = document.createElement('optgroup');
       grpDegisim.label = "⚖️ Diyetisyen Değişim / Standart Porsiyon";
 
@@ -623,7 +624,6 @@
       });
       portionSelect.appendChild(grpDegisim);
 
-      // 3. ADET BAZLI SEÇENEKLER
       let unitCount = null;
       let unitName = "Adet";
 
@@ -687,6 +687,11 @@
       const query = trNormalize(searchRaw);
       const select = document.getElementById(`food_select_${mIdx}`);
       if (!select) return;
+
+      if (!allFoods || allFoods.length === 0) {
+        select.innerHTML = '<option value="">Besin veritabanı yükleniyor...</option>';
+        return;
+      }
 
       select.innerHTML = '';
       if (!query) {
@@ -1078,7 +1083,7 @@
       }
     }
 
-    // Gerektiğinde dinamik font yükleyici
+    // PDF font yükleyici
     async function getTurkishFontBase64() {
       if (cachedTurkishFont) return cachedTurkishFont;
       try {
@@ -1105,7 +1110,7 @@
       return String(text).replace(/İ/g, "I");
     }
 
-    // %100 TÜRKÇE KARAKTERLİ PDF RAPORU
+    // %100 Türkçe Karakterli PDF Raporu
     async function olusturVeIndirPDF() {
       const btn = document.getElementById('btnPdfIndir');
       const btnText = document.getElementById('btnPdfText');
@@ -1364,8 +1369,7 @@
         totals.vitamin_a_mcg.toFixed(1), totals.vitamin_c_mg.toFixed(2), totals.vitamin_d_mcg.toFixed(2), totals.vitamin_b1_mg.toFixed(2), totals.vitamin_b2_mg.toFixed(2), totals.vitamin_b6_mg.toFixed(2), totals.vitamin_b12_mcg.toFixed(2), totals.folat_mcg.toFixed(1)
       ];
 
-      const csvContent = "﻿" + headerRow.join(";") + "
-" + valRow.join(";");
+      const csvContent = "\uFEFF" + headerRow.join(";") + "\r\n" + valRow.join(";");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -1376,7 +1380,7 @@
       document.body.removeChild(link);
     }
 
-    // YENİ: Bulunamayan Besini Mail Olarak Gönderme Fonksiyonu
+    // Bulunamayan Besini Mail Olarak Gönderme Fonksiyonu (FormData ile CORS hatasız)
     async function sendMissingFoodFeedback() {
       const input = document.getElementById('missingFoodInput');
       const btn = document.getElementById('btnSendFeedback');
@@ -1398,22 +1402,15 @@
       }
 
       try {
+        const formData = new FormData();
+        formData.append("access_key", WEB3FORMS_ACCESS_KEY);
+        formData.append("subject", "emreyle diyet: Yeni Besin / Ürün Önerisi Talebi");
+        formData.append("from_name", "emreyle diyet Web Sitesi");
+        formData.append("message", `Kullanıcı tarafından veritabanında bulunamayan ve eklenmesi talep edilen besin:\n\n👉 ${foodName}\n\nTarih: ${new Date().toLocaleString('tr-TR')}`);
+
         const response = await fetch("https://api.web3forms.com/submit", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            access_key: WEB3FORMS_ACCESS_KEY,
-            subject: "emreyle diyet: Yeni Besin / Ürün Önerisi Talebi",
-            from_name: "emreyle diyet Web Sitesi",
-            message: `Kullanıcı tarafından veritabanında bulunamayan ve eklenmesi talep edilen besin:
-
-👉 ${foodName}
-
-Tarih: ${new Date().toLocaleString('tr-TR')}`
-          })
+          body: formData
         });
 
         const result = await response.json();
@@ -1430,18 +1427,23 @@ Tarih: ${new Date().toLocaleString('tr-TR')}`
         console.error("Geri bildirim hatası:", err);
         if (status) {
           status.className = "mt-2 text-xs font-semibold text-rose-600 block";
-          status.textContent = "Gönderim sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.";
+          status.textContent = "Gönderim sırasında bir hata oluştu: " + err.message;
         }
       } finally {
         if (btn) btn.disabled = false;
       }
     }
 
-    // Safari ve mobil tarayıcılar için güvenli başlatma
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
+    // Sayfa hazır olduğunda arayüzü anında yükle
+    function startApp() {
+      renderMealsUI();
       init();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startApp);
+    } else {
+      startApp();
     }
   </script>
 </body>
