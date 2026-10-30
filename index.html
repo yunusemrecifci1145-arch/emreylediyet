@@ -986,7 +986,13 @@
       }
     }
 
-    // %100 TÜRKÇE KARAKTERLİ KLİNİK PDF RAPORU
+    // jsPDF'de büyük 'İ' (U+0130) glifinin '0' olarak basılmasını önleyen dönüştürücü
+    function fixPdfText(text) {
+      if (text === null || text === undefined) return "";
+      return String(text).replace(/İ/g, "I");
+    }
+
+    // %100 TÜRKÇE KARAKTERLİ KLİNİK PDF RAPORU (Sıfır Karakter Hatası)
     async function olusturVeIndirPDF() {
       const btn = document.getElementById('btnPdfIndir');
       const btnText = document.getElementById('btnPdfText');
@@ -1018,9 +1024,9 @@
         MEALS.forEach(m => {
           tuketimListesi[m].forEach(item => {
             mealItemsRows.push([
-              m,
-              item.besin_adi,
-              item.olcu_tanimi,
+              fixPdfText(m),
+              fixPdfText(item.besin_adi),
+              fixPdfText(item.olcu_tanimi),
               `%${item.tuketim_yuzdesi}`,
               item.enerji_kcal.toFixed(1),
               item.karbonhidrat_g.toFixed(1),
@@ -1040,11 +1046,12 @@
         doc.rect(0, 0, 210, 24, "F");
 
         doc.setTextColor(255, 255, 255);
+        if (fontBase64) doc.setFont("Roboto");
         doc.setFontSize(12.5);
-        doc.text("HASTANE BESİN TÜKETİM VE NUTRİSYON RAPORU", 14, 11);
+        doc.text(fixPdfText("HASTANE BESİN TÜKETİM VE NUTRİSYON RAPORU"), 14, 11);
         
         doc.setFontSize(8.5);
-        doc.text("Klinik Diyet Takip ve Tüketim Analizi | @emreyle.diyet", 14, 17);
+        doc.text(fixPdfText("Klinik Diyet Takip ve Tüketim Analizi | @emreyle.diyet"), 14, 17);
 
         const now = new Date();
         const tarihStr = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth()+1).toString().padStart(2, '0')}.${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -1059,16 +1066,16 @@
           styles: { font: fontToUse, fontSize: 9, cellPadding: 1.6, textColor: [30, 41, 59] },
           columnStyles: { 0: { fontStyle: "normal", width: 38 }, 1: { width: 67 }, 2: { fontStyle: "normal", width: 40 }, 3: { width: 45 } },
           body: [
-            ["Hasta Kodu / No:", hasta, "Servis / Bölüm:", servis],
-            ["Enerji Hedefi:", `${hKcal} kcal`, "Protein Hedefi:", `${hPro} g`],
-            ["Enerji Karşılama:", hKcal > 0 ? `%${((kcal / hKcal) * 100).toFixed(1)}` : "Tanımlanmadı", "Protein Karşılama:", hPro > 0 ? `%${((totals.protein_g / hPro) * 100).toFixed(1)}` : "Tanımlanmadı"]
+            [fixPdfText("Hasta Kodu / No:"), fixPdfText(hasta), fixPdfText("Servis / Bölüm:"), fixPdfText(servis)],
+            [fixPdfText("Enerji Hedefi:"), `${hKcal} kcal`, fixPdfText("Protein Hedefi:"), `${hPro} g`],
+            [fixPdfText("Enerji Karşılama:"), hKcal > 0 ? `%${((kcal / hKcal) * 100).toFixed(1)}` : fixPdfText("Tanımlanmadı"), fixPdfText("Protein Karşılama:"), hPro > 0 ? `%${((totals.protein_g / hPro) * 100).toFixed(1)}` : fixPdfText("Tanımlanmadı")]
           ]
         });
 
         // Makro Özeti Tablosu
         doc.autoTable({
           startY: doc.lastAutoTable.finalY + 3,
-          head: [["Toplam Enerji", "Karbonhidrat (CHO)", "Protein", "Yağ", "Lif (Posa)"]],
+          head: [[fixPdfText("Toplam Enerji"), fixPdfText("Karbonhidrat (CHO)"), fixPdfText("Protein"), fixPdfText("Yağ"), fixPdfText("Lif (Posa)")]],
           body: [[
             `${kcal.toFixed(1)} kcal`,
             `${totals.karbonhidrat_g.toFixed(1)} g (%${pctCarb})`,
@@ -1078,35 +1085,35 @@
           ]],
           theme: "grid",
           styles: { font: fontToUse },
-          headStyles: { fillColor: [13, 148, 136], textColor: [255, 255, 255], halign: "center", fontSize: 8.5 },
-          bodyStyles: { halign: "center", fontSize: 8.5, textColor: [15, 23, 42] }
+          headStyles: { font: fontToUse, fillColor: [13, 148, 136], textColor: [255, 255, 255], halign: "center", fontSize: 8.5 },
+          bodyStyles: { font: fontToUse, halign: "center", fontSize: 8.5, textColor: [15, 23, 42] }
         });
 
         // Tüketilen Besinler Listesi
         doc.setFontSize(9.5);
         doc.setTextColor(30, 41, 59);
-        doc.text("Öğün Bazlı Tüketilen Besinler Listesi", 14, doc.lastAutoTable.finalY + 6.5);
+        doc.text(fixPdfText("Öğün Bazlı Tüketilen Besinler Listesi"), 14, doc.lastAutoTable.finalY + 6.5);
         
         if (mealItemsRows.length === 0) {
-          mealItemsRows.push(["-", "Henüz besin girilmedi", "-", "-", "0.0", "0.0", "0.0", "0.0"]);
+          mealItemsRows.push(["-", fixPdfText("Henüz besin girilmedi"), "-", "-", "0.0", "0.0", "0.0", "0.0"]);
         }
 
         doc.autoTable({
           startY: doc.lastAutoTable.finalY + 8.5,
-          head: [["Öğün", "Besin / Ürün Adı", "Değişim / Porsiyon", "Tüketim %", "Enerji (kcal)", "Karb (g)", "Protein (g)", "Yağ (g)"]],
+          head: [[fixPdfText("Öğün"), fixPdfText("Besin / Ürün Adı"), fixPdfText("Değişim / Porsiyon"), fixPdfText("Tüketim %"), fixPdfText("Enerji (kcal)"), fixPdfText("Karb (g)"), fixPdfText("Protein (g)"), fixPdfText("Yağ (g)")]],
           body: mealItemsRows,
           theme: "striped",
           styles: { font: fontToUse, fontSize: 8, cellPadding: 1.5 },
-          headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontSize: 8 },
+          headStyles: { font: fontToUse, fillColor: [51, 65, 85], textColor: [255, 255, 255], fontSize: 8 },
           columnStyles: { 4: { halign: "right" }, 5: { halign: "right" }, 6: { halign: "right" }, 7: { halign: "right" } }
         });
 
         // Mikrobesinler Tablosu
         doc.setFontSize(9.5);
         doc.setTextColor(30, 41, 59);
-        doc.text("Alınan Tüm Mikro Besin Öğeleri ve Mineraller", 14, doc.lastAutoTable.finalY + 6.5);
+        doc.text(fixPdfText("Alınan Tüm Mikro Besin Öğeleri ve Mineraller"), 14, doc.lastAutoTable.finalY + 6.5);
 
-        const microData = [
+        const rawMicroData = [
           ["Doymuş Yağ", `${totals.doymus_yag_g.toFixed(2)} g`, "Vitamin A", `${totals.vitamin_a_mcg.toFixed(1)} mcg`],
           ["Tekli Doymamış Yağ (MUFA)", `${totals.tekli_doymamis_yag_g.toFixed(2)} g`, "Vitamin C", `${totals.vitamin_c_mg.toFixed(1)} mg`],
           ["Çoklu Doymamış Yağ (PUFA)", `${totals.coklu_doymamis_yag_g.toFixed(2)} g`, "D Vitamini", `${totals.vitamin_d_mcg.toFixed(1)} mcg`],
@@ -1120,21 +1127,23 @@
           ["Demir (Fe)", `${totals.demir_mg.toFixed(2)} mg`, "Lif (Posa Toplamı)", `${totals.lif_g.toFixed(1)} g`]
         ];
 
+        const microData = rawMicroData.map(r => [fixPdfText(r[0]), r[1], fixPdfText(r[2]), r[3]]);
+
         doc.autoTable({
           startY: doc.lastAutoTable.finalY + 8.5,
-          head: [["Besin Öğesi", "Alınan Miktar", "Besin Öğesi", "Alınan Miktar"]],
+          head: [[fixPdfText("Besin Öğesi"), fixPdfText("Alınan Miktar"), fixPdfText("Besin Öğesi"), fixPdfText("Alınan Miktar")]],
           body: microData,
           theme: "grid",
           styles: { font: fontToUse, fontSize: 8, cellPadding: 1.5 },
-          headStyles: { fillColor: [15, 118, 110], textColor: [255, 255, 255], fontSize: 8 },
+          headStyles: { font: fontToUse, fillColor: [15, 118, 110], textColor: [255, 255, 255], fontSize: 8 },
           columnStyles: { 1: { halign: "right" }, 3: { halign: "right" } }
         });
 
         const pageHeight = doc.internal.pageSize.height;
         doc.setFontSize(8);
         doc.setTextColor(100, 116, 139);
-        doc.text("Geliştiren: Yunus Emre Çifçi - Beslenme ve Diyetetik", 14, pageHeight - 8);
-        doc.text("Instagram: @emreyle.diyet", 196, pageHeight - 8, { align: "right" });
+        doc.text(fixPdfText("Geliştiren: Yunus Emre Çifçi - Beslenme ve Diyetetik"), 14, pageHeight - 8);
+        doc.text(fixPdfText("Instagram: @emreyle.diyet"), 196, pageHeight - 8, { align: "right" });
 
         const dosyaAdi = `${hasta.replace(/[^a-zA-Z0-9_\-üğşıöçÜĞŞİÖÇ]/g, "_")}_Besin_Tuketim_Raporu.pdf`;
         doc.save(dosyaAdi);
@@ -1146,7 +1155,6 @@
         if (btn) btn.disabled = false;
       }
     }
-
     function indirExcel() {
       const hasta = document.getElementById('hastaKodu')?.value.trim() || "İsimsiz Hasta";
       const servis = document.getElementById('hastaServis')?.value.trim() || "Genel";
