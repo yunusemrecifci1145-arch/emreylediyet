@@ -1403,8 +1403,7 @@
         totals.vitamin_a_mcg.toFixed(1), totals.vitamin_c_mg.toFixed(2), totals.vitamin_d_mcg.toFixed(2), totals.vitamin_b1_mg.toFixed(2), totals.vitamin_b2_mg.toFixed(2), totals.vitamin_b6_mg.toFixed(2), totals.vitamin_b12_mcg.toFixed(2), totals.folat_mcg.toFixed(1)
       ];
 
-      const csvContent = "﻿" + headerRow.join(";") + "
-" + valRow.join(";");
+      const csvContent = "\uFEFF" + headerRow.join(";") + "\r\n" + valRow.join(";");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
