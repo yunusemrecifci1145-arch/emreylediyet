@@ -432,57 +432,61 @@
       }
     }
 
+    // SADECE VE SADECE GERÇEK HASTANE TABLDOT & SICAK ANA YEMEKLERİ İÇİN HASTANE PORSIYONU ÜRETİLİR
     function getHastanePorsiyonu(food) {
       if (!food) return null;
       const cat = trNormalize(food.kategori || "");
       const name = trNormalize(food.besin_adi || "");
       const refG = Number(food.referans_miktar_g) || 100;
 
+      // 1. KESİNLİKLE HASTANE PORSIYONU ÇIKMAYACAK TEMEL BESİNLER (Doğrudan Standart Diyet Değişimi veya Adet Çıkacak)
+      if (
+        cat.includes("ekmek") || name.includes("ekmek") || name.includes("roll") || name.includes("simit") || name.includes("pogaca") ||
+        cat.includes("peynir") || cat.includes("sut") || cat.includes("meyve") || cat.includes("kuruyemis") ||
+        cat.includes("yaglar") || cat.includes("baharat") || cat.includes("atistirmalik") || cat.includes("enteral") ||
+        cat.includes("bebek") || name.includes("yumurta") || name.includes("zeytin") || name.includes("ceviz") || name.includes("findik")
+      ) {
+        return null;
+      }
+
       let hGram = null;
       let aciklama = "1 Servis";
 
-      if (cat.includes("pilav") || cat.includes("tahil") || cat.includes("makarna") || cat.includes("eriste") || name.includes("pilav") || name.includes("makarna") || name.includes("bulgur") || name.includes("kuskus")) {
+      // 2. SADECE GERÇEK HASTANE MENÜSÜ SICAK/SOĞUK YEMEKLERİ (Tabldot / Ana Yemek / Çorba / Pilav)
+      if (cat.includes("corba") || name.includes("corba")) {
+        hGram = 200;
+        aciklama = "1 Kase / 1 Kepçe";
+      }
+      else if (cat.includes("pilav") || cat.includes("makarna") || cat.includes("eriste") || name.includes("pilav") || name.includes("makarna") || name.includes("bulgur") || name.includes("kuskus")) {
         hGram = 130;
         aciklama = "1 Kepçe / 4-5 YK";
       }
-      else if (cat.includes("corba") || name.includes("corba")) {
-        hGram = 200;
-        aciklama = "1 Küçük Kase / 1 Kepçe";
-      }
-      else if (cat.includes("baklagil") || name.includes("fasulye") || name.includes("nohut") || name.includes("barbunya") || name.includes("mercimek")) {
+      else if (cat.includes("baklagil") || name.includes("kuru fasulye") || name.includes("nohut yemegi") || name.includes("barbunya pilaki") || name.includes("yesil mercimek yemegi")) {
         hGram = 180;
         aciklama = "1 Tabak / 1 Kepçe";
       }
-      else if (cat.includes("sebze") || cat.includes("zeytinyagli")) {
+      else if (cat.includes("sebze yemekleri") || cat.includes("zeytinyagli") || name.includes("musakka") || name.includes("turlu") || name.includes("karniyarik") || name.includes("oturtma")) {
         hGram = 180;
-        aciklama = "1 Hastane Servis Tabağı";
+        aciklama = "1 Servis Tabağı";
       }
-      else if (cat.includes("et") || cat.includes("tavuk") || cat.includes("balik") || name.includes("kofte") || name.includes("tavuk") || name.includes("haslama")) {
+      else if (cat.includes("kirmizi et") || cat.includes("beyaz et") || cat.includes("kebap") || name.includes("kofte") || name.includes("tavuk sote") || name.includes("haslama et") || name.includes("kebap")) {
         hGram = 120;
         aciklama = "1 Porsiyon Ana Yemek";
-      }
-      else if (name.includes("yogurt") || name.includes("cacik") || cat.includes("sut")) {
-        hGram = 150;
-        aciklama = "1 Kase / Kutu";
       }
       else if (name.includes("komposto") || name.includes("hosaf")) {
         hGram = 160;
         aciklama = "1 Komposto Kasesi";
       }
-      else if (name.includes("salata") || name.includes("sogus")) {
+      else if (cat.includes("salatalar") || name.includes("salata")) {
         hGram = 120;
         aciklama = "1 Salata Tabağı";
       }
       else if (cat.includes("borek") || name.includes("borek")) {
         hGram = 130;
-        aciklama = "1 Küçük Dilim";
+        aciklama = "1 Porsiyon / Dilim";
       }
-      else if (refG > 150) {
-        hGram = Math.round(refG * 0.75);
-        aciklama = "1 Klinik Servis Ölçüsü";
-      } else {
-        hGram = refG;
-        aciklama = "Standart Servis";
+      else {
+        return null;
       }
 
       const multiplier = hGram / refG;
@@ -502,6 +506,7 @@
       const sp = String(food.standart_porsiyon || '');
       const hInfo = getHastanePorsiyonu(food);
 
+      // 1. EĞER GERÇEK BİR HASTANE YEMEĞİ İSE: HASTANE SERVİS PORSIYONU
       if (hInfo) {
         const grpHastane = document.createElement('optgroup');
         grpHastane.label = "🏥 Hastane Menüsü Servis Porsiyonu";
@@ -522,6 +527,7 @@
         portionSelect.appendChild(grpHastane);
       }
 
+      // 2. DİYETİSYEN DEĞİŞİM / STANDART PORSIYON
       const grpDegisim = document.createElement('optgroup');
       grpDegisim.label = "⚖️ Diyetisyen Değişim / Standart Porsiyon";
 
@@ -542,10 +548,15 @@
         const opt = document.createElement('option');
         opt.value = item.val;
         opt.textContent = item.lbl;
+        // Eğer hastane porsiyonu yoksa varsayılan 1 Tam Değişim seçili olsun
+        if (!hInfo && item.val === 1.0) {
+          opt.selected = true;
+        }
         grpDegisim.appendChild(opt);
       });
       portionSelect.appendChild(grpDegisim);
 
+      // 3. ADET BAZLI SEÇENEKLER
       let unitCount = null;
       let unitName = "Adet";
 
@@ -593,9 +604,13 @@
 
       if (food && label) {
         const hInfo = getHastanePorsiyonu(food);
-        const defaultGram = hInfo ? hInfo.gram : food.referans_miktar_g;
-        label.textContent = `🏥 Hastane: ${defaultGram}g (Değişim: ${food.referans_miktar_g}g)`;
-        if (gramInput) gramInput.value = defaultGram;
+        if (hInfo) {
+          label.textContent = `🏥 Hastane: ${hInfo.gram}g (Değişim: ${food.referans_miktar_g}g)`;
+          if (gramInput) gramInput.value = hInfo.gram;
+        } else {
+          label.textContent = `⚖️ Standart Değişim: ${food.referans_miktar_g}g`;
+          if (gramInput) gramInput.value = food.referans_miktar_g;
+        }
         populatePortionOptions(mIdx, food);
       }
     }
