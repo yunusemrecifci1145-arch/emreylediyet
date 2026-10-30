@@ -11,7 +11,16 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Hastane Besin Tüketim Kaydı ve Analiz Sistemi</title>
+  <title>emreyle diyet | Akıllı Besin ve Kalori Takip Sistemi</title>
+  
+  <!-- SEO & Arama Motoru Optimizasyonu -->
+  <meta name="description" content="emreyle diyet - Akıllı Besin ve Kalori Takip Sistemi. 800+ temel besin, 580+ hazır yemek ve 120+ enteral ürünle detaylı makro ve mikro besin analizi.">
+  <meta name="keywords" content="emreyle diyet, emreylediyet, akıllı besin ve kalori takip sistemi, kalori takip, besin tüketimi, diyetisyen yazılımı, enteral ürünler, makro mikro analiz, beslenme analizi">
+  <meta name="author" content="emreyle diyet - Yunus Emre Çifçi">
+  <meta property="og:title" content="emreyle diyet | Akıllı Besin ve Kalori Takip Sistemi">
+  <meta property="og:description" content="Akıllı besin, kalori ve klinik beslenme analiz sistemi. Tüm makro ve mikro besin ögelerini anlık takip edin.">
+  <meta property="og:type" content="website">
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome -->
@@ -33,11 +42,11 @@
     <header class="bg-teal-800 text-white shadow-md sticky top-0 z-30">
       <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center space-x-3">
-          <i class="fa-solid fa-hospital-user text-2xl text-teal-300"></i>
+          <i class="fa-solid fa-utensils text-2xl text-teal-300"></i>
           <div>
-            <h1 class="text-base md:text-xl font-bold tracking-tight">Hastane Besin Tüketim Kaydı ve Analiz Sistemi</h1>
+            <h1 class="text-base md:text-xl font-bold tracking-tight">emreyle diyet | Akıllı Besin ve Kalori Takip Sistemi</h1>
             <div class="flex items-center flex-wrap gap-2 text-xs text-teal-200 mt-0.5">
-              <span>800 Temel Besin · 580 Hazır Yemek & Menü · 120 Enteral Ürün | TürKomp, TÜBER & Klinik Değişim Veritabanı</span>
+              <span>800 Temel Besin · 580 Hazır Yemek & Menü · 120 Enteral Ürün | TürKomp, TÜBER & Standart Değişim Veritabanı</span>
               <span class="bg-teal-900/80 text-amber-300 border border-teal-600/70 px-2.5 py-0.5 rounded-full font-bold tracking-wide">
                 <i class="fa-brands fa-instagram mr-1"></i>@emreyle.diyet
               </span>
@@ -46,28 +55,28 @@
         </div>
         <button onclick="sifirlaModal()" class="bg-rose-700 hover:bg-rose-800 text-white px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold flex items-center space-x-1.5 transition shadow-sm">
           <i class="fa-solid fa-rotate-left"></i>
-          <span>Yeni Hasta / Sıfırla</span>
+          <span>Yeni Kayıt / Sıfırla</span>
         </button>
       </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-      <!-- 1. Hasta Bilgileri ve Hedefler -->
+      <!-- 1. Kişi / Danışan Bilgileri ve Hedefler -->
       <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
         <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2 border-b pb-3 mb-4">
           <i class="fa-solid fa-id-card-clip text-teal-700"></i>
-          <span>📋 Hasta & Klinik Bilgileri ve Günlük Hedefler</span>
+          <span>📋 Kişi / Danışan Bilgileri ve Günlük Hedefler</span>
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">Hasta Kodu / No</label>
-            <input type="text" id="hastaKodu" placeholder="Örn: Dahiliye-204" 
+            <label class="block text-xs font-bold text-slate-600 mb-1">İsim / Kayıt No</label>
+            <input type="text" id="hastaKodu" placeholder="Örn: Yunus Emre veya Kayıt-101" 
                    class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">Servis / Bölüm</label>
-            <input type="text" id="hastaServis" placeholder="Örn: KBB / Genel Cerrahi / Nöroloji" 
+            <label class="block text-xs font-bold text-slate-600 mb-1">Grup / Kategori / Servis (İsteğe Bağlı)</label>
+            <input type="text" id="hastaServis" placeholder="Örn: Bireysel / Sporcu / Poliklinik / Genel" 
                    class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
           </div>
           <div>
@@ -90,7 +99,7 @@
         <div class="flex items-center justify-between border-b pb-3 flex-wrap gap-2">
           <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2">
             <i class="fa-solid fa-utensils text-teal-700"></i>
-            <span>🍽️ Öğün Girişleri & Klinik Değişim Takibi</span>
+            <span>🍽️ Öğün Girişleri & Değişim / Porsiyon Takibi</span>
           </h2>
           <span class="text-xs text-teal-800 bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 font-medium">
             <i class="fa-solid fa-scale-balanced mr-1"></i>Diyetisyen Değişim / Porsiyon veya Net Gramaj Seçimi
@@ -140,7 +149,7 @@
         <div id="targetSection" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
           <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
             <i class="fa-solid fa-bullseye text-teal-600"></i>
-            <span>🎯 Klinik Hedef Karşılama Oranları</span>
+            <span>🎯 Günlük Hedef Karşılama Oranları</span>
           </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -164,11 +173,44 @@
           </div>
         </div>
 
+        <!-- YENİ: Eklenen Besinler ve Makro Dökümü Tablosu -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+              <i class="fa-solid fa-list-check text-teal-600"></i>
+              <span>📋 Eklenen Tüm Besinler ve Makro Dökümü</span>
+            </h3>
+            <span class="text-[11px] text-slate-500">Öğün bazlı eklenen ürünlerin anlık özeti</span>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm">
+            <table class="w-full text-left text-xs divide-y divide-slate-200">
+              <thead class="bg-slate-100 font-bold text-slate-700">
+                <tr>
+                  <th class="p-2.5">Öğün</th>
+                  <th class="p-2.5">Besin / Ürün Adı</th>
+                  <th class="p-2.5">Ölçü / Değişim</th>
+                  <th class="p-2.5 text-center">Tüketim %</th>
+                  <th class="p-2.5 text-right">Kalori (kcal)</th>
+                  <th class="p-2.5 text-right">Karb (g)</th>
+                  <th class="p-2.5 text-right">Protein (g)</th>
+                  <th class="p-2.5 text-right">Yağ (g)</th>
+                  <th class="p-2.5 text-right">Lif (g)</th>
+                </tr>
+              </thead>
+              <tbody id="allFoodsSummaryTableBody" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="9" class="p-4 text-center text-slate-400 italic">Henüz öğünlere besin eklenmedi.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- Mikro Besin Ögeleri Tablosu -->
         <div class="space-y-2">
           <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
             <i class="fa-solid fa-microscope text-teal-600"></i>
-            <span>🔬 Günlük Alınan Tüm Besin Ögeleri Dökümü</span>
+            <span>🔬 Günlük Alınan Tüm Mikro Besin Ögeleri ve Mineraller</span>
           </h3>
           <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
             <table class="w-full text-left text-xs divide-y divide-slate-200">
@@ -177,7 +219,7 @@
                   <th class="p-2.5">Besin Ögesi</th>
                   <th class="p-2.5 text-right">Toplam Alınan Miktar</th>
                   <th class="p-2.5">Birim</th>
-                  <th class="p-2.5 text-slate-400">Klinik Not</th>
+                  <th class="p-2.5 text-slate-400">Beslenme & Sağlık Notu</th>
                 </tr>
               </thead>
               <tbody id="microTableBody" class="divide-y divide-slate-100"></tbody>
@@ -191,7 +233,7 @@
             <!-- PDF Export Button -->
             <button id="btnPdfIndir" onclick="olusturVeIndirPDF()" class="bg-rose-700 hover:bg-rose-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
               <i class="fa-solid fa-file-pdf text-base"></i>
-              <span id="btnPdfText">📄 Klinik PDF Raporu İndir</span>
+              <span id="btnPdfText">📄 Analiz PDF Raporu İndir</span>
             </button>
             
             <!-- Excel XLSX Export Button -->
@@ -203,7 +245,7 @@
             <!-- CSV Button -->
             <button onclick="indirCSV()" class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-2 transition shadow-sm">
               <i class="fa-solid fa-file-csv text-base"></i>
-              <span>📁 CSV İndir (SPSS)</span>
+              <span>📁 CSV İndir (Veri)</span>
             </button>
           </div>
 
@@ -213,6 +255,29 @@
           </button>
         </div>
 
+      </section>
+
+      <!-- 4. YENİ: Bulamadığınız Besini Bildirin Kartı -->
+      <section class="bg-gradient-to-r from-teal-50 to-slate-50 p-5 rounded-2xl border border-teal-200 shadow-sm">
+        <div class="max-w-3xl">
+          <h2 class="text-sm md:text-base font-bold text-teal-900 flex items-center space-x-2 mb-1.5">
+            <i class="fa-solid fa-circle-question text-teal-600"></i>
+            <span>Bulamadığınız Bir Besin veya Yemek mi Var?</span>
+          </h2>
+          <p class="text-xs text-slate-600 mb-3">
+            Sistemde arayıp bulamadığınız yemek, marka veya ürünleri bize iletin; en kısa sürede veritabanına ekleyelim.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-2.5">
+            <input type="text" id="missingFoodInput" placeholder="Örn: X Marka Protein Bar, Siyez Bulguru Pilavı..." 
+                   class="flex-1 px-3.5 py-2 text-xs md:text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none bg-white">
+            <button id="btnSendFeedback" onclick="sendMissingFoodFeedback()" 
+                    class="bg-teal-700 hover:bg-teal-800 text-white px-5 py-2 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center space-x-2 transition shadow-sm whitespace-nowrap">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Geliştiriciye İlet</span>
+            </button>
+          </div>
+          <div id="feedbackStatus" class="mt-2 text-xs font-semibold hidden"></div>
+        </div>
       </section>
 
     </main>
@@ -234,6 +299,9 @@
   </footer>
 
   <script>
+    // Web3Forms Doğrudan Entegre Access Key
+    const WEB3FORMS_ACCESS_KEY = "D4cc88a7-e28b-4dc7-8d0e-4aebffd49d28";
+
     const MEALS = [
       "Kahvaltı", 
       "Kuşluk (Ara 1)", 
@@ -432,14 +500,14 @@
       }
     }
 
-    // SADECE VE SADECE GERÇEK HASTANE TABLDOT & SICAK ANA YEMEKLERİ İÇİN HASTANE PORSIYONU ÜRETİLİR
+    // SADECE VE SADECE GERÇEK TABLDOT & SICAK ANA YEMEKLERİ İÇİN HASTANE / TABLDOT PORSIYONU ÜRETİLİR
     function getHastanePorsiyonu(food) {
       if (!food) return null;
       const cat = trNormalize(food.kategori || "");
       const name = trNormalize(food.besin_adi || "");
       const refG = Number(food.referans_miktar_g) || 100;
 
-      // 1. KESİNLİKLE HASTANE PORSIYONU ÇIKMAYACAK TEMEL BESİNLER (Doğrudan Standart Diyet Değişimi veya Adet Çıkacak)
+      // 1. KESİNLİKLE TABLDOT PORSIYONU ÇIKMAYACAK TEMEL BESİNLER
       if (
         cat.includes("ekmek") || name.includes("ekmek") || name.includes("roll") || name.includes("simit") || name.includes("pogaca") ||
         cat.includes("peynir") || cat.includes("sut") || cat.includes("meyve") || cat.includes("kuruyemis") ||
@@ -452,7 +520,7 @@
       let hGram = null;
       let aciklama = "1 Servis";
 
-      // 2. SADECE GERÇEK HASTANE MENÜSÜ SICAK/SOĞUK YEMEKLERİ (Tabldot / Ana Yemek / Çorba / Pilav)
+      // 2. TABLDOT VE SICAK/SOĞUK YEMEKLER
       if (cat.includes("corba") || name.includes("corba")) {
         hGram = 200;
         aciklama = "1 Kase / 1 Kepçe";
@@ -506,21 +574,21 @@
       const sp = String(food.standart_porsiyon || '');
       const hInfo = getHastanePorsiyonu(food);
 
-      // 1. EĞER GERÇEK BİR HASTANE YEMEĞİ İSE: HASTANE SERVİS PORSIYONU
+      // 1. EĞER GERÇEK BİR TABLDOT / SICAK YEMEK İSE
       if (hInfo) {
         const grpHastane = document.createElement('optgroup');
-        grpHastane.label = "🏥 Hastane Menüsü Servis Porsiyonu";
+        grpHastane.label = "🏥 Standart Menü Servis Porsiyonu";
 
         const optH = document.createElement('option');
         optH.value = hInfo.multiplier;
-        optH.textContent = `🏥 Hastane Standart Porsiyonu (${hInfo.gram}g - ${hInfo.aciklama})`;
+        optH.textContent = `🏥 Standart Yemek Porsiyonu (${hInfo.gram}g - ${hInfo.aciklama})`;
         optH.selected = true;
         grpHastane.appendChild(optH);
 
         if (hInfo.gram >= 80) {
           const optHYarim = document.createElement('option');
           optHYarim.value = (hInfo.multiplier * 0.5).toFixed(4);
-          optHYarim.textContent = `🏥 Hastane Yarım Porsiyon (${Math.round(hInfo.gram * 0.5)}g)`;
+          optHYarim.textContent = `🏥 Yarım Porsiyon (${Math.round(hInfo.gram * 0.5)}g)`;
           grpHastane.appendChild(optHYarim);
         }
 
@@ -548,7 +616,6 @@
         const opt = document.createElement('option');
         opt.value = item.val;
         opt.textContent = item.lbl;
-        // Eğer hastane porsiyonu yoksa varsayılan 1 Tam Değişim seçili olsun
         if (!hInfo && item.val === 1.0) {
           opt.selected = true;
         }
@@ -605,7 +672,7 @@
       if (food && label) {
         const hInfo = getHastanePorsiyonu(food);
         if (hInfo) {
-          label.textContent = `🏥 Hastane: ${hInfo.gram}g (Değişim: ${food.referans_miktar_g}g)`;
+          label.textContent = `🏥 Menü Porsiyonu: ${hInfo.gram}g (Değişim: ${food.referans_miktar_g}g)`;
           if (gramInput) gramInput.value = hInfo.gram;
         } else {
           label.textContent = `⚖️ Standart Değişim: ${food.referans_miktar_g}g`;
@@ -842,6 +909,51 @@
       return totals;
     }
 
+    function updateAllFoodsSummaryTable() {
+      const tbody = document.getElementById('allFoodsSummaryTableBody');
+      if (!tbody) return;
+
+      let allRows = [];
+      MEALS.forEach(m => {
+        tuketimListesi[m].forEach(item => {
+          allRows.push({
+            meal: m,
+            name: item.besin_adi,
+            portion: item.olcu_tanimi,
+            pct: item.tuketim_yuzdesi,
+            kcal: item.enerji_kcal,
+            carb: item.karbonhidrat_g,
+            pro: item.protein_g,
+            fat: item.yag_g,
+            fiber: item.lif_g
+          });
+        });
+      });
+
+      if (allRows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400 italic">Henüz öğünlere besin eklenmedi.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      allRows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="p-2.5 font-bold text-teal-800">${r.meal}</td>
+          <td class="p-2.5 font-semibold text-slate-800">${r.name}</td>
+          <td class="p-2.5 text-slate-600">${r.portion}</td>
+          <td class="p-2.5 text-center font-semibold text-slate-700">%${r.pct}</td>
+          <td class="p-2.5 text-right font-bold text-slate-900">${r.kcal.toFixed(1)}</td>
+          <td class="p-2.5 text-right font-medium text-teal-700">${r.carb.toFixed(1)}</td>
+          <td class="p-2.5 text-right font-medium text-blue-700">${r.pro.toFixed(1)}</td>
+          <td class="p-2.5 text-right font-medium text-amber-700">${r.fat.toFixed(1)}</td>
+          <td class="p-2.5 text-right font-medium text-emerald-700">${r.fiber.toFixed(1)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
     function hesaplaVeGuncelle() {
       const totals = getHesaplananToplamlar();
 
@@ -908,24 +1020,24 @@
         ["Doymuş Yağ", totals.doymus_yag_g.toFixed(2), "g", "Kardiyak & lipid izlemi"],
         ["Tekli Doymamış Yağ (MUFA)", totals.tekli_doymamis_yag_g.toFixed(2), "g", "Damar sağlığı & kardiyoprotektif"],
         ["Çoklu Doymamış Yağ (PUFA)", totals.coklu_doymamis_yag_g.toFixed(2), "g", "Hücre zarı & esansiyel yağ asitleri"],
-        ["Kolesterol", totals.kolesterol_mg.toFixed(1), "mg", "Kardiyovasküler diyet kısıtlaması"],
+        ["Kolesterol", totals.kolesterol_mg.toFixed(1), "mg", "Kardiyovasküler kısıtlama & takip"],
         ["İlave Şeker", totals.ilave_seker_g.toFixed(1), "g", "Glisemik kontrol & insülin direnci"],
         ["Sodyum (Na)", totals.sodyum_mg.toFixed(1), "mg", "Tansiyon & ödem kontrolü"],
-        ["Potasyum (K)", totals.potasyum_mg.toFixed(1), "mg", "Renal & elektrolit dengesi"],
+        ["Potasyum (K)", totals.potasyum_mg.toFixed(1), "mg", "Elektrolit dengesi & kas fonksiyonu"],
         ["Kalsiyum (Ca)", totals.kalsiyum_mg.toFixed(1), "mg", "Kemik bütünlüğü & nöromusküler iletim"],
         ["Magnezyum (Mg)", totals.magnezyum_mg.toFixed(1), "mg", "Kas krampları & enzim kofaktörü"],
-        ["Fosfor (P)", totals.fosfor_mg.toFixed(1), "mg", "Kemik mineralizasyonu & renal diyet"],
+        ["Fosfor (P)", totals.fosfor_mg.toFixed(1), "mg", "Kemik mineralizasyonu & metabolizma"],
         ["Demir (Fe)", totals.demir_mg.toFixed(2), "mg", "Anemi & hemoglobin sentezi"],
-        ["Çinko (Zn)", totals.cinko_mg.toFixed(2), "mg", "Yara iyileşmesi & immün yanıt"],
+        ["Çinko (Zn)", totals.cinko_mg.toFixed(2), "mg", "Doku onarımı & immün yanıt"],
         ["Selenyum (Se)", totals.selenyum_mcg.toFixed(1), "mcg", "Antioksidan savunma & tiroit metabolizması"],
         ["Vitamin A", totals.vitamin_a_mcg.toFixed(1), "mcg", "Epitel & görme fonksiyonu"],
         ["Vitamin C", totals.vitamin_c_mg.toFixed(1), "mg", "Antioksidan, doku onarımı & kolajen"],
         ["D Vitamini", totals.vitamin_d_mcg.toFixed(1), "mcg", "Kalsiyum emilimi & immün sistem"],
         ["Vitamin B1 (Tiamin)", totals.vitamin_b1_mg.toFixed(2), "mg", "Karbonhidrat metabolizması & sinir sistemi"],
-        ["Vitamin B2 (Riboflavin)", totals.vitamin_b2_mg.toFixed(2), "mg", "Hücresel enerji döngüsü & FAD sentezi"],
+        ["Vitamin B2 (Riboflavin)", totals.vitamin_b2_mg.toFixed(2), "mg", "Hücresel enerji döngüsü"],
         ["Vitamin B6 (Piridoksin)", totals.vitamin_b6_mg.toFixed(2), "mg", "Protein metabolizması & nörotransmiterler"],
         ["Vitamin B12 (Kobalamin)", totals.vitamin_b12_mcg.toFixed(2), "mcg", "Eritrosit matürasyonu & nörolojik sağlık"],
-        ["Folat (Vitamin B9)", totals.folat_mcg.toFixed(1), "mcg", "Eritrosit & DNA sentezi"]
+        ["Folat (Vitamin B9)", totals.folat_mcg.toFixed(1), "mcg", "Hücre yenilenmesi & DNA sentezi"]
       ];
 
       const tbody = document.getElementById('microTableBody');
@@ -942,10 +1054,12 @@
           tbody.appendChild(tr);
         });
       }
+
+      updateAllFoodsSummaryTable();
     }
 
     function sifirlaModal() {
-      if (confirm("Mevcut hastanın tüm kayıtları silinecek ve form sıfırlanacaktır. Onaylıyor musunuz?")) {
+      if (confirm("Mevcut kişinin tüm kayıtları silinecek ve form sıfırlanacaktır. Onaylıyor musunuz?")) {
         const hKodu = document.getElementById('hastaKodu');
         const hServis = document.getElementById('hastaServis');
         const hKcal = document.getElementById('hedefKcal');
@@ -986,13 +1100,12 @@
       }
     }
 
-    // jsPDF'de büyük 'İ' (U+0130) glifinin '0' olarak basılmasını önleyen dönüştürücü
     function fixPdfText(text) {
       if (text === null || text === undefined) return "";
       return String(text).replace(/İ/g, "I");
     }
 
-    // %100 TÜRKÇE KARAKTERLİ KLİNİK PDF RAPORU (Sıfır Karakter Hatası)
+    // %100 TÜRKÇE KARAKTERLİ PDF RAPORU
     async function olusturVeIndirPDF() {
       const btn = document.getElementById('btnPdfIndir');
       const btnText = document.getElementById('btnPdfText');
@@ -1005,7 +1118,6 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-        // İhtiyaç duyulduğunda fontu yükle
         const fontBase64 = await getTurkishFontBase64();
         if (fontBase64) {
           doc.addFileToVFS("Roboto.ttf", fontBase64);
@@ -1013,8 +1125,8 @@
           doc.setFont("Roboto");
         }
 
-        const hasta = document.getElementById('hastaKodu')?.value.trim() || "İsimsiz Hasta";
-        const servis = document.getElementById('hastaServis')?.value.trim() || "Genel Servis";
+        const hasta = document.getElementById('hastaKodu')?.value.trim() || "Kayıtsız Kullanıcı";
+        const servis = document.getElementById('hastaServis')?.value.trim() || "Genel";
         const hKcal = Number(document.getElementById('hedefKcal')?.value) || 0;
         const hPro = Number(document.getElementById('hedefProtein')?.value) || 0;
 
@@ -1048,10 +1160,10 @@
         doc.setTextColor(255, 255, 255);
         if (fontBase64) doc.setFont("Roboto");
         doc.setFontSize(12.5);
-        doc.text(fixPdfText("HASTANE BESİN TÜKETİM VE NUTRİSYON RAPORU"), 14, 11);
+        doc.text(fixPdfText("emreyle diyet - AKILLI BESİN VE KALORİ TAKİP RAPORU"), 14, 11);
         
         doc.setFontSize(8.5);
-        doc.text(fixPdfText("Klinik Diyet Takip ve Tüketim Analizi | @emreyle.diyet"), 14, 17);
+        doc.text(fixPdfText("Besin Tüketim Kaydı ve Detaylı Nütrisyonel Analiz | @emreyle.diyet"), 14, 17);
 
         const now = new Date();
         const tarihStr = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth()+1).toString().padStart(2, '0')}.${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -1059,14 +1171,14 @@
 
         const fontToUse = fontBase64 ? "Roboto" : "helvetica";
 
-        // Hasta Bilgileri Tablosu
+        // Kullanıcı Bilgileri Tablosu
         doc.autoTable({
           startY: 28,
           theme: "plain",
           styles: { font: fontToUse, fontSize: 9, cellPadding: 1.6, textColor: [30, 41, 59] },
           columnStyles: { 0: { fontStyle: "normal", width: 38 }, 1: { width: 67 }, 2: { fontStyle: "normal", width: 40 }, 3: { width: 45 } },
           body: [
-            [fixPdfText("Hasta Kodu / No:"), fixPdfText(hasta), fixPdfText("Servis / Bölüm:"), fixPdfText(servis)],
+            [fixPdfText("İsim / Kayıt No:"), fixPdfText(hasta), fixPdfText("Grup / Kategori:"), fixPdfText(servis)],
             [fixPdfText("Enerji Hedefi:"), `${hKcal} kcal`, fixPdfText("Protein Hedefi:"), `${hPro} g`],
             [fixPdfText("Enerji Karşılama:"), hKcal > 0 ? `%${((kcal / hKcal) * 100).toFixed(1)}` : fixPdfText("Tanımlanmadı"), fixPdfText("Protein Karşılama:"), hPro > 0 ? `%${((totals.protein_g / hPro) * 100).toFixed(1)}` : fixPdfText("Tanımlanmadı")]
           ]
@@ -1092,7 +1204,7 @@
         // Tüketilen Besinler Listesi
         doc.setFontSize(9.5);
         doc.setTextColor(30, 41, 59);
-        doc.text(fixPdfText("Öğün Bazlı Tüketilen Besinler Listesi"), 14, doc.lastAutoTable.finalY + 6.5);
+        doc.text(fixPdfText("Öğün Bazlı Tüketilen Besinler ve Makro Dökümü"), 14, doc.lastAutoTable.finalY + 6.5);
         
         if (mealItemsRows.length === 0) {
           mealItemsRows.push(["-", fixPdfText("Henüz besin girilmedi"), "-", "-", "0.0", "0.0", "0.0", "0.0"]);
@@ -1100,7 +1212,7 @@
 
         doc.autoTable({
           startY: doc.lastAutoTable.finalY + 8.5,
-          head: [[fixPdfText("Öğün"), fixPdfText("Besin / Ürün Adı"), fixPdfText("Değişim / Porsiyon"), fixPdfText("Tüketim %"), fixPdfText("Enerji (kcal)"), fixPdfText("Karb (g)"), fixPdfText("Protein (g)"), fixPdfText("Yağ (g)")]],
+          head: [[fixPdfText("Öğün"), fixPdfText("Besin / Ürün Adı"), fixPdfText("Ölçü / Değişim"), fixPdfText("Tüketim %"), fixPdfText("Enerji (kcal)"), fixPdfText("Karb (g)"), fixPdfText("Protein (g)"), fixPdfText("Yağ (g)")]],
           body: mealItemsRows,
           theme: "striped",
           styles: { font: fontToUse, fontSize: 8, cellPadding: 1.5 },
@@ -1111,7 +1223,7 @@
         // Mikrobesinler Tablosu
         doc.setFontSize(9.5);
         doc.setTextColor(30, 41, 59);
-        doc.text(fixPdfText("Alınan Tüm Mikro Besin Öğeleri ve Mineraller"), 14, doc.lastAutoTable.finalY + 6.5);
+        doc.text(fixPdfText("Alınan Tüm Mikro Besin Ögeleri ve Mineraller"), 14, doc.lastAutoTable.finalY + 6.5);
 
         const rawMicroData = [
           ["Doymuş Yağ", `${totals.doymus_yag_g.toFixed(2)} g`, "Vitamin A", `${totals.vitamin_a_mcg.toFixed(1)} mcg`],
@@ -1131,7 +1243,7 @@
 
         doc.autoTable({
           startY: doc.lastAutoTable.finalY + 8.5,
-          head: [[fixPdfText("Besin Öğesi"), fixPdfText("Alınan Miktar"), fixPdfText("Besin Öğesi"), fixPdfText("Alınan Miktar")]],
+          head: [[fixPdfText("Besin Ögesi"), fixPdfText("Alınan Miktar"), fixPdfText("Besin Ögesi"), fixPdfText("Alınan Miktar")]],
           body: microData,
           theme: "grid",
           styles: { font: fontToUse, fontSize: 8, cellPadding: 1.5 },
@@ -1155,8 +1267,9 @@
         if (btn) btn.disabled = false;
       }
     }
+
     function indirExcel() {
-      const hasta = document.getElementById('hastaKodu')?.value.trim() || "İsimsiz Hasta";
+      const hasta = document.getElementById('hastaKodu')?.value.trim() || "Kayıtsız Kullanıcı";
       const servis = document.getElementById('hastaServis')?.value.trim() || "Genel";
       const hKcal = Number(document.getElementById('hedefKcal')?.value) || 0;
       const hPro = Number(document.getElementById('hedefProtein')?.value) || 0;
@@ -1165,9 +1278,9 @@
       const wb = XLSX.utils.book_new();
 
       const ozetData = [
-        ["KLİNİK BİLGİ / ALAN", "DEĞER", "BİRİM"],
-        ["Hasta Kodu / No", hasta, ""],
-        ["Servis / Bölüm", servis, ""],
+        ["BİLGİ / ALAN", "DEĞER", "BİRİM"],
+        ["İsim / Kayıt No", hasta, ""],
+        ["Grup / Kategori / Servis", servis, ""],
         ["Günlük Enerji Hedefi", hKcal, "kcal"],
         ["Günlük Protein Hedefi", hPro, "g"],
         ["Toplam Alınan Enerji", totals.enerji_kcal.toFixed(1), "kcal"],
@@ -1229,14 +1342,14 @@
 
     // CSV İndir
     function indirCSV() {
-      const hasta = document.getElementById('hastaKodu')?.value.trim() || "hasta_isimsiz";
+      const hasta = document.getElementById('hastaKodu')?.value.trim() || "kayit_isimsiz";
       const servis = document.getElementById('hastaServis')?.value.trim() || "Genel";
       const hKcal = document.getElementById('hedefKcal')?.value || 0;
       const hPro = document.getElementById('hedefProtein')?.value || 0;
       const totals = getHesaplananToplamlar();
 
       const headerRow = [
-        "Hasta_Kodu", "Servis", "Hedef_Kcal", "Hedef_Protein",
+        "Isim_Kayit_No", "Grup_Kategori", "Hedef_Kcal", "Hedef_Protein",
         "Toplam_Enerji_kcal", "Karbonhidrat_g", "Protein_g", "Yag_g", "Doymus_Yag_g",
         "Tekli_Doymamis_Yag_g", "Coklu_Doymamis_Yag_g", "Kolesterol_mg", "Ilave_Seker_g", "Lif_g",
         "Sodyum_mg", "Potasyum_mg", "Kalsiyum_mg", "Magnezyum_mg", "Fosfor_mg", "Demir_mg", "Cinko_mg", "Selenyum_mcg",
@@ -1251,7 +1364,8 @@
         totals.vitamin_a_mcg.toFixed(1), totals.vitamin_c_mg.toFixed(2), totals.vitamin_d_mcg.toFixed(2), totals.vitamin_b1_mg.toFixed(2), totals.vitamin_b2_mg.toFixed(2), totals.vitamin_b6_mg.toFixed(2), totals.vitamin_b12_mcg.toFixed(2), totals.folat_mcg.toFixed(1)
       ];
 
-      const csvContent = "\uFEFF" + headerRow.join(";") + "\r\n" + valRow.join(";");
+      const csvContent = "﻿" + headerRow.join(";") + "
+" + valRow.join(";");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -1260,6 +1374,67 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+
+    // YENİ: Bulunamayan Besini Mail Olarak Gönderme Fonksiyonu
+    async function sendMissingFoodFeedback() {
+      const input = document.getElementById('missingFoodInput');
+      const btn = document.getElementById('btnSendFeedback');
+      const status = document.getElementById('feedbackStatus');
+      const foodName = input ? input.value.trim() : '';
+
+      if (!foodName) {
+        if (status) {
+          status.className = "mt-2 text-xs font-semibold text-rose-600 block";
+          status.textContent = "Lütfen eklenmesini istediğiniz besin veya ürün adını yazınız.";
+        }
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      if (status) {
+        status.className = "mt-2 text-xs font-semibold text-teal-700 block";
+        status.textContent = "Talebiniz iletiliyor, lütfen bekleyiniz...";
+      }
+
+      try {
+        const response = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            access_key: WEB3FORMS_ACCESS_KEY,
+            subject: "emreyle diyet: Yeni Besin / Ürün Önerisi Talebi",
+            from_name: "emreyle diyet Web Sitesi",
+            message: `Kullanıcı tarafından veritabanında bulunamayan ve eklenmesi talep edilen besin:
+
+👉 ${foodName}
+
+Tarih: ${new Date().toLocaleString('tr-TR')}`
+          })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          if (status) {
+            status.className = "mt-2 text-xs font-semibold text-emerald-700 block";
+            status.textContent = "✓ Teşekkürler! Besin öneriniz başarıyla iletildi. En kısa sürede listeye eklenecektir.";
+          }
+          if (input) input.value = '';
+        } else {
+          throw new Error(result.message || "Gönderim başarısız");
+        }
+      } catch (err) {
+        console.error("Geri bildirim hatası:", err);
+        if (status) {
+          status.className = "mt-2 text-xs font-semibold text-rose-600 block";
+          status.textContent = "Gönderim sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.";
+        }
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     }
 
     // Safari ve mobil tarayıcılar için güvenli başlatma
