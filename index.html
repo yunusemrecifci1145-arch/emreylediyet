@@ -53,7 +53,7 @@
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-      <!-- 1. Hasta / Danışan Bilgileri ve Hedefler -->
+      <!-- 1. Kişi Bilgileri ve Hedefler -->
       <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
         <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2 border-b pb-3 mb-4">
           <i class="fa-solid fa-id-card-clip text-teal-700"></i>
@@ -984,7 +984,6 @@
       }
     }
 
-    // Gerektiğinde dinamik font yükleyici
     async function getTurkishFontBase64() {
       if (cachedTurkishFont) return cachedTurkishFont;
       try {
@@ -1011,7 +1010,6 @@
       return String(text).replace(/İ/g, "I");
     }
 
-    // %100 TÜRKÇE KARAKTERLİ PDF RAPORU
     async function olusturVeIndirPDF() {
       const btn = document.getElementById('btnPdfIndir');
       const btnText = document.getElementById('btnPdfText');
@@ -1059,7 +1057,6 @@
         const pctPro = kcal > 0 ? (totals.protein_g * 4 / kcal * 100).toFixed(1) : "0.0";
         const pctFat = kcal > 0 ? (totals.yag_g * 9 / kcal * 100).toFixed(1) : "0.0";
 
-        // Üst Başlık Bandı
         doc.setFillColor(15, 118, 110);
         doc.rect(0, 0, 210, 24, "F");
 
@@ -1077,7 +1074,6 @@
 
         const fontToUse = fontBase64 ? "Roboto" : "helvetica";
 
-        // Hasta Bilgileri Tablosu
         doc.autoTable({
           startY: 28,
           theme: "plain",
@@ -1090,7 +1086,6 @@
           ]
         });
 
-        // Makro Özeti Tablosu
         doc.autoTable({
           startY: doc.lastAutoTable.finalY + 3,
           head: [[fixPdfText("Toplam Enerji"), fixPdfText("Karbonhidrat (CHO)"), fixPdfText("Protein"), fixPdfText("Yağ"), fixPdfText("Lif (Posa)")]],
@@ -1107,7 +1102,6 @@
           bodyStyles: { font: fontToUse, halign: "center", fontSize: 8.5, textColor: [15, 23, 42] }
         });
 
-        // Tüketilen Besinler Listesi
         doc.setFontSize(9.5);
         doc.setTextColor(30, 41, 59);
         doc.text(fixPdfText("Öğün Bazlı Tüketilen Besinler Listesi"), 14, doc.lastAutoTable.finalY + 6.5);
@@ -1126,7 +1120,6 @@
           columnStyles: { 4: { halign: "right" }, 5: { halign: "right" }, 6: { halign: "right" }, 7: { halign: "right" } }
         });
 
-        // Mikrobesinler Tablosu
         doc.setFontSize(9.5);
         doc.setTextColor(30, 41, 59);
         doc.text(fixPdfText("Alınan Tüm Mikro Besin Öğeleri ve Mineraller"), 14, doc.lastAutoTable.finalY + 6.5);
@@ -1213,7 +1206,7 @@
         ["Vitamin B1", totals.vitamin_b1_mg.toFixed(2), "mg"],
         ["Vitamin B2", totals.vitamin_b2_mg.toFixed(2), "mg"],
         ["Vitamin B6", totals.vitamin_b6_mg.toFixed(2), "mg"],
-        ["Vitamin B12", totals.vitamin_b12_mcg.toFixed(2), "mg"],
+        ["Vitamin B12", totals.vitamin_b12_mcg.toFixed(2), "mcg"],
         ["Folat", totals.folat_mcg.toFixed(1), "mcg"]
       ];
       const wsOzet = XLSX.utils.aoa_to_sheet(ozetData);
@@ -1248,14 +1241,14 @@
 
     // CSV İndir
     function indirCSV() {
-      const hasta = document.getElementById('hastaKodu')?.value.trim() || "hasta_isimsiz";
+      const hasta = document.getElementById('hastaKodu')?.value.trim() || "kayit_isimsiz";
       const servis = document.getElementById('hastaServis')?.value.trim() || "Genel";
       const hKcal = document.getElementById('hedefKcal')?.value || 0;
       const hPro = document.getElementById('hedefProtein')?.value || 0;
       const totals = getHesaplananToplamlar();
 
       const headerRow = [
-        "Hasta_Kodu", "Servis", "Hedef_Kcal", "Hedef_Protein",
+        "Isim_Kayit_No", "Grup_Kategori", "Hedef_Kcal", "Hedef_Protein",
         "Toplam_Enerji_kcal", "Karbonhidrat_g", "Protein_g", "Yag_g", "Doymus_Yag_g",
         "Tekli_Doymamis_Yag_g", "Coklu_Doymamis_Yag_g", "Kolesterol_mg", "Ilave_Seker_g", "Lif_g",
         "Sodyum_mg", "Potasyum_mg", "Kalsiyum_mg", "Magnezyum_mg", "Fosfor_mg", "Demir_mg", "Cinko_mg", "Selenyum_mcg",
@@ -1281,7 +1274,7 @@
       document.body.removeChild(link);
     }
 
-    // Bulunamayan Besini Gönderme Fonksiyonu (Çift Korumalı: Fetch + Doğrudan Instagram / Mailto)
+    // Bulunamayan Besini Bildirme Fonksiyonu
     async function sendMissingFoodFeedback() {
       const input = document.getElementById('missingFoodInput');
       const btn = document.getElementById('btnSendFeedback');
@@ -1306,8 +1299,8 @@
         const payload = {
           access_key: "d4cc88a7-e28b-4dc7-8d0e-4aebffd49d28",
           name: "emreyle diyet Kullanıcısı",
-          subject: "Yeni Besin Önerisi: " + foodName,
-          message: "Kullanıcı tarafından veritabanında bulunamayan ve eklenmesi istenen besin: " + foodName
+          subject: "Yeni Besin Önerisi Talebi",
+          message: "Kullanıcı tarafından eklenmesi istenen besin:\n\n👉 " + foodName + "\n\nTarih: " + new Date().toLocaleString('tr-TR')
         };
 
         const res = await fetch("https://api.web3forms.com/submit", {
@@ -1336,7 +1329,7 @@
       }
     }
 
-    // Safari ve mobil tarayıcılar için güvenli başlatma
+    // Doğrudan çalışan güvenli başlatma
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
     } else {
