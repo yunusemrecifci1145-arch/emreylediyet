@@ -66,8 +66,8 @@
                    class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">Grup / Kategori / Servis</label>
-            <input type="text" id="hastaServis" placeholder="Örn: Bireysel / Sporcu / Poliklinik" 
+            <label class="block text-xs font-bold text-slate-600 mb-1">Grup / Kategori / Servis (İsteğe Bağlı)</label>
+            <input type="text" id="hastaServis" placeholder="Örn: Bireysel / Sporcu / Poliklinik / Genel" 
                    class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-600 focus:outline-none">
           </div>
           <div>
@@ -164,11 +164,44 @@
           </div>
         </div>
 
+        <!-- Eklenen Tüm Besinler ve Makro Dökümü Tablosu -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+              <i class="fa-solid fa-list-check text-teal-600"></i>
+              <span>📋 Eklenen Tüm Besinler ve Makro Dökümü</span>
+            </h3>
+            <span class="text-[11px] text-slate-400">Öğün bazlı eklenen ürünlerin anlık özeti</span>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
+            <table class="w-full text-left text-xs divide-y divide-slate-200">
+              <thead class="bg-slate-50 font-bold text-slate-700">
+                <tr>
+                  <th class="p-2.5">Öğün</th>
+                  <th class="p-2.5">Besin / Ürün Adı</th>
+                  <th class="p-2.5">Ölçü / Değişim</th>
+                  <th class="p-2.5 text-center">Tüketim %</th>
+                  <th class="p-2.5 text-right">Kalori (kcal)</th>
+                  <th class="p-2.5 text-right">Karb (g)</th>
+                  <th class="p-2.5 text-right">Protein (g)</th>
+                  <th class="p-2.5 text-right">Yağ (g)</th>
+                  <th class="p-2.5 text-right">Lif (g)</th>
+                </tr>
+              </thead>
+              <tbody id="addedFoodsSummaryBody" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="9" class="p-4 text-center text-slate-400 italic">Henüz öğünlere besin eklenmedi.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- Mikro Besin Ögeleri Tablosu -->
         <div class="space-y-2">
           <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
             <i class="fa-solid fa-microscope text-teal-600"></i>
-            <span>🔬 Günlük Alınan Tüm Besin Ögeleri Dökümü</span>
+            <span>🔬 Günlük Alınan Tüm Mikro Besin Ögeleri ve Mineraller</span>
           </h3>
           <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
             <table class="w-full text-left text-xs divide-y divide-slate-200">
@@ -273,7 +306,7 @@
       "Öğle Yemeği": [],
       "İkindi (Ara 2)": [],
       "Akşam Yemeği": [],
-      "Gece (Ara 3)"
+      "Gece (Ara 3)": []
     };
 
     let cachedTurkishFont = null;
@@ -294,14 +327,20 @@
     }
 
     async function init() {
+      // Önce öğün arayüzünü oluştur ki JSON yüklenirken bile kutular hemen görünsün
+      renderMealsUI();
+      hesaplaVeGuncelle();
+
       try {
-        const res = await fetch('foods_1500.json', { cache: 'no-store' });
+        const res = await fetch('./foods_1500.json', { cache: 'no-store' });
         if (!res.ok) {
           throw new Error('Dosya yanıt vermedi: HTTP ' + res.status);
         }
         const raw = await res.json();
-        allFoods = raw.map(f => ({
-          id: f.id ?? f["ID"],
+        const foodList = Array.isArray(raw) ? raw : (raw.foods || raw.data || []);
+
+        allFoods = foodList.map((f, index) => ({
+          id: Number(f.id ?? f["ID"] ?? (index + 1)),
           kategori: f.kategori ?? f["Kategori"] ?? "Genel",
           besin_adi: f.besin_adi ?? f["Besin Adı"] ?? "Bilinmeyen",
           standart_porsiyon: f.standart_porsiyon ?? f["Standart Porsiyon"] ?? "1 Porsiyon",
@@ -334,13 +373,16 @@
           tekli_doymamis_yag_g: Number(f.tekli_doymamis_yag_g ?? f["Tekli Doymamış Yağ (g)"] ?? 0),
           coklu_doymamis_yag_g: Number(f.coklu_doymamis_yag_g ?? f["Çoklu Doymamış Yağ (g)"] ?? 0)
         }));
-        renderMealsUI();
-        hesaplaVeGuncelle();
+
+        MEALS.forEach((_, mIdx) => filterFoodDropdown(mIdx));
       } catch (err) {
         console.error("foods_1500.json yüklenemedi:", err);
         const container = document.getElementById('mealsContainer');
         if (container) {
-          container.innerHTML = '<div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-semibold">⚠️ Besin veritabanı (foods_1500.json) yüklenirken bir sorun oluştu. Lütfen dosyanın yüklendiğinden emin olunuz.</div>';
+          container.insertAdjacentHTML(
+            'afterbegin',
+            '<div class="p-4 mb-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-semibold">⚠️ Besin veritabanı (foods_1500.json) yüklenirken bir sorun oluştu. Lütfen dosyanın aynı dizinde olduğundan emin olunuz.</div>'
+          );
         }
       }
     }
@@ -455,7 +497,6 @@
       }
     }
 
-    // SADECE VE SADECE GERÇEK HASTANE TABLDOT & SICAK ANA YEMEKLERİ İÇİN HASTANE PORSIYONU ÜRETİLİR
     function getHastanePorsiyonu(food) {
       if (!food) return null;
       const cat = trNormalize(food.kategori || "");
@@ -639,6 +680,15 @@
       if (!select) return;
 
       select.innerHTML = '';
+
+      if (allFoods.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = "";
+        opt.textContent = "Besin veritabanı yükleniyor...";
+        select.appendChild(opt);
+        return;
+      }
+
       if (!query) {
         allFoods.slice(0, 100).forEach(f => {
           const opt = document.createElement('option');
@@ -902,9 +952,9 @@
       const barEnerji = document.getElementById('barEnerji');
       if (lblEnerjiKarsilama && barEnerji) {
         if (hedefKcal > 0) {
-          const pKcal = Math.round((totals.enerji_kcal / hedefKcal) * 100);
+          const pKcal = ((totals.enerji_kcal / hedefKcal) * 100).toFixed(1);
           lblEnerjiKarsilama.textContent = `%${pKcal}`;
-          barEnerji.style.width = `${Math.min(pKcal, 100)}%`;
+          barEnerji.style.width = `${Math.min(Number(pKcal), 100)}%`;
         } else {
           lblEnerjiKarsilama.textContent = `%0.0`;
           barEnerji.style.width = `0%`;
@@ -915,12 +965,45 @@
       const barProtein = document.getElementById('barProtein');
       if (lblProteinKarsilama && barProtein) {
         if (hedefProtein > 0) {
-          const pPro = Math.round((totals.protein_g / hedefProtein) * 100);
+          const pPro = ((totals.protein_g / hedefProtein) * 100).toFixed(1);
           lblProteinKarsilama.textContent = `%${pPro}`;
-          barProtein.style.width = `${Math.min(pPro, 100)}%`;
+          barProtein.style.width = `${Math.min(Number(pPro), 100)}%`;
         } else {
           lblProteinKarsilama.textContent = `%0.0`;
           barProtein.style.width = `0%`;
+        }
+      }
+
+      // Eklenen Tüm Besinler Özeti Tablosunu Güncelle
+      const summaryBody = document.getElementById('addedFoodsSummaryBody');
+      if (summaryBody) {
+        let allItemsHtml = '';
+        MEALS.forEach(m => {
+          tuketimListesi[m].forEach(item => {
+            allItemsHtml += `
+              <tr class="hover:bg-slate-50">
+                <td class="p-2.5 font-semibold text-teal-800">${m}</td>
+                <td class="p-2.5 font-bold text-slate-800">${item.besin_adi}</td>
+                <td class="p-2.5 text-slate-600">${item.olcu_tanimi}</td>
+                <td class="p-2.5 text-center font-semibold text-slate-600">%${item.tuketim_yuzdesi}</td>
+                <td class="p-2.5 text-right font-mono font-bold text-slate-800">${item.enerji_kcal.toFixed(1)}</td>
+                <td class="p-2.5 text-right font-mono text-teal-700">${item.karbonhidrat_g.toFixed(1)}</td>
+                <td class="p-2.5 text-right font-mono text-blue-700">${item.protein_g.toFixed(1)}</td>
+                <td class="p-2.5 text-right font-mono text-amber-700">${item.yag_g.toFixed(1)}</td>
+                <td class="p-2.5 text-right font-mono text-emerald-700">${item.lif_g.toFixed(1)}</td>
+              </tr>
+            `;
+          });
+        });
+
+        if (!allItemsHtml) {
+          summaryBody.innerHTML = `
+            <tr>
+              <td colspan="9" class="p-4 text-center text-slate-400 italic">Henüz öğünlere besin eklenmedi.</td>
+            </tr>
+          `;
+        } else {
+          summaryBody.innerHTML = allItemsHtml;
         }
       }
 
@@ -1239,7 +1322,6 @@
       XLSX.writeFile(wb, dosyaAdi);
     }
 
-    // CSV İndir
     function indirCSV() {
       const hasta = document.getElementById('hastaKodu')?.value.trim() || "kayit_isimsiz";
       const servis = document.getElementById('hastaServis')?.value.trim() || "Genel";
@@ -1274,7 +1356,6 @@
       document.body.removeChild(link);
     }
 
-    // Bulunamayan Besini Bildirme Fonksiyonu
     async function sendMissingFoodFeedback() {
       const input = document.getElementById('missingFoodInput');
       const btn = document.getElementById('btnSendFeedback');
@@ -1329,7 +1410,6 @@
       }
     }
 
-    // Doğrudan çalışan güvenli başlatma
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
     } else {
