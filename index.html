@@ -338,6 +338,22 @@
         .trim();
     }
 
+    // JSON içindeki farklı sütun/anahtar varyasyonlarını yakalayan yardımcı fonksiyon
+    function getProp(obj, keys, defaultVal = "") {
+      for (let k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null && obj[k] !== "") {
+          return obj[k];
+        }
+      }
+      return defaultVal;
+    }
+
+    function getPropNum(obj, keys, defaultVal = 0) {
+      const val = getProp(obj, keys, defaultVal);
+      const parsed = parseFloat(String(val).replace(",", "."));
+      return isNaN(parsed) ? defaultVal : parsed;
+    }
+
     async function init() {
       try {
         const res = await fetch('foods_1500.json', { cache: 'no-store' });
@@ -345,43 +361,52 @@
           throw new Error('Dosya yanıt vermedi: HTTP ' + res.status);
         }
         const raw = await res.json();
-        allFoods = raw.map(f => ({
-          id: f.id ?? f["ID"],
-          kategori: f.kategori ?? f["Kategori"] ?? "Genel",
-          besin_adi: f.besin_adi ?? f["Besin Adı"] ?? "Bilinmeyen",
-          standart_porsiyon: f.standart_porsiyon ?? f["Standart Porsiyon"] ?? "1 Porsiyon",
-          referans_miktar_g: Number(f.referans_miktar_g ?? f["Referans Miktar (g/ml)"] ?? 100),
-          arama_anahtarlari: f.arama_anahtarlari ?? f["Arama Anahtarları (Alias)"] ?? "",
-          enerji_kcal: Number(f.enerji_kcal ?? f["Enerji (kcal)"] ?? 0),
-          protein_g: Number(f.protein_g ?? f["Protein (g)"] ?? 0),
-          yag_g: Number(f.yag_g ?? f["Yağ (g)"] ?? 0),
-          doymus_yag_g: Number(f.doymus_yag_g ?? f["Doymuş Yağ (g)"] ?? 0),
-          karbonhidrat_g: Number(f.karbonhidrat_g ?? f["Karbonhidrat (g)"] ?? 0),
-          lif_g: Number(f.lif_g ?? f["Lif (g)"] ?? 0),
-          sodyum_mg: Number(f.sodyum_mg ?? f["Sodyum (mg)"] ?? 0),
-          potasyum_mg: Number(f.potasyum_mg ?? f["Potasyum (mg)"] ?? 0),
-          kalsiyum_mg: Number(f.kalsiyum_mg ?? f["Kalsiyum (mg)"] ?? 0),
-          demir_mg: Number(f.demir_mg ?? f["Demir (mg)"] ?? 0),
-          cinko_mg: Number(f.cinko_mg ?? f["Çinko (mg)"] ?? 0),
-          magnezyum_mg: Number(f.magnezyum_mg ?? f["Magnezyum (mg)"] ?? 0),
-          fosfor_mg: Number(f.fosfor_mg ?? f["Fosfor (mg)"] ?? 0),
-          selenyum_mcg: Number(f.selenyum_mcg ?? f["Selenyum (mcg)"] ?? 0),
-          vitamin_a_mcg: Number(f.vitamin_a_mcg ?? f["Vitamin A (mcg)"] ?? 0),
-          vitamin_c_mg: Number(f.vitamin_c_mg ?? f["Vitamin C (mg)"] ?? 0),
-          vitamin_d_mcg: Number(f.vitamin_d_mcg ?? f["D Vitamini (mcg)"] ?? 0),
-          vitamin_b1_mg: Number(f.vitamin_b1_mg ?? f["Vitamin B1 (mg)"] ?? 0),
-          vitamin_b2_mg: Number(f.vitamin_b2_mg ?? f["Vitamin B2 (mg)"] ?? 0),
-          vitamin_b6_mg: Number(f.vitamin_b6_mg ?? f["B6 Vitamini (mg)"] ?? 0),
-          vitamin_b12_mcg: Number(f.vitamin_b12_mcg ?? f["B12 Vitamini (mcg)"] ?? 0),
-          folat_mcg: Number(f.folat_mcg ?? f["Folat (mcg)"] ?? 0),
-          kolesterol_mg: Number(f.kolesterol_mg ?? f["Kolesterol (mg)"] ?? 0),
-          ilave_seker_g: Number(f.ilave_seker_g ?? f["İlave Şeker (g)"] ?? 0),
-          tekli_doymamis_yag_g: Number(f.tekli_doymamis_yag_g ?? f["Tekli Doymamış Yağ (g)"] ?? 0),
-          coklu_doymamis_yag_g: Number(f.coklu_doymamis_yag_g ?? f["Çoklu Doymamış Yağ (g)"] ?? 0)
-        }));
         
-        // Veri başarıyla gelince tüm seçim kutularını güncelle
-        MEALS.forEach((_, idx) => filterFoodDropdown(idx));
+        // Veriyi standardize et ve her birine garantili benzersiz string ID ata
+        allFoods = raw.map((f, index) => {
+          const rawId = getProp(f, ["id", "ID", "Id", "besin_id", "Besin_ID"]);
+          const uniqueId = rawId !== "" ? String(rawId) : `food_${index + 1}`;
+          
+          return {
+            id: uniqueId,
+            kategori: getProp(f, ["kategori", "Kategori", "Category"], "Genel"),
+            besin_adi: getProp(f, ["besin_adi", "Besin Adı", "Besin_Adi", "Adı", "name"], "Bilinmeyen"),
+            standart_porsiyon: getProp(f, ["standart_porsiyon", "Standart Porsiyon", "Porsiyon"], "1 Porsiyon"),
+            referans_miktar_g: getPropNum(f, ["referans_miktar_g", "Referans Miktar (g/ml)", "Miktar", "Gram"], 100),
+            arama_anahtarlari: getProp(f, ["arama_anahtarlari", "Arama Anahtarları (Alias)", "Alias", "keywords"], ""),
+            enerji_kcal: getPropNum(f, ["enerji_kcal", "Enerji (kcal)", "Kalori", "kcal"], 0),
+            protein_g: getPropNum(f, ["protein_g", "Protein (g)", "protein"], 0),
+            yag_g: getPropNum(f, ["yag_g", "Yağ (g)", "yag", "fat"], 0),
+            doymus_yag_g: getPropNum(f, ["doymus_yag_g", "Doymuş Yağ (g)"], 0),
+            karbonhidrat_g: getPropNum(f, ["karbonhidrat_g", "Karbonhidrat (g)", "karbonhidrat"], 0),
+            lif_g: getPropNum(f, ["lif_g", "Lif (g)", "posa", "fiber"], 0),
+            sodyum_mg: getPropNum(f, ["sodyum_mg", "Sodyum (mg)", "sodyum"], 0),
+            potasyum_mg: getPropNum(f, ["potasyum_mg", "Potasyum (mg)", "potasyum"], 0),
+            kalsiyum_mg: getPropNum(f, ["kalsiyum_mg", "Kalsiyum (mg)", "kalsiyum"], 0),
+            demir_mg: getPropNum(f, ["demir_mg", "Demir (mg)", "demir"], 0),
+            cinko_mg: getPropNum(f, ["cinko_mg", "Çinko (mg)", "cinko"], 0),
+            magnezyum_mg: getPropNum(f, ["magnezyum_mg", "Magnezyum (mg)"], 0),
+            fosfor_mg: getPropNum(f, ["fosfor_mg", "Fosfor (mg)"], 0),
+            selenyum_mcg: getPropNum(f, ["selenyum_mcg", "Selenyum (mcg)"], 0),
+            vitamin_a_mcg: getPropNum(f, ["vitamin_a_mcg", "Vitamin A (mcg)"], 0),
+            vitamin_c_mg: getPropNum(f, ["vitamin_c_mg", "Vitamin C (mg)"], 0),
+            vitamin_d_mcg: getPropNum(f, ["vitamin_d_mcg", "D Vitamini (mcg)"], 0),
+            vitamin_b1_mg: getPropNum(f, ["vitamin_b1_mg", "Vitamin B1 (mg)"], 0),
+            vitamin_b2_mg: getPropNum(f, ["vitamin_b2_mg", "Vitamin B2 (mg)"], 0),
+            vitamin_b6_mg: getPropNum(f, ["vitamin_b6_mg", "B6 Vitamini (mg)"], 0),
+            vitamin_b12_mcg: getPropNum(f, ["vitamin_b12_mcg", "B12 Vitamini (mcg)"], 0),
+            folat_mcg: getPropNum(f, ["folat_mcg", "Folat (mcg)"], 0),
+            kolesterol_mg: getPropNum(f, ["kolesterol_mg", "Kolesterol (mg)"], 0),
+            ilave_seker_g: getPropNum(f, ["ilave_seker_g", "İlave Şeker (g)"], 0),
+            tekli_doymamis_yag_g: getPropNum(f, ["tekli_doymamis_yag_g", "Tekli Doymamış Yağ (g)"], 0),
+            coklu_doymamis_yag_g: getPropNum(f, ["coklu_doymamis_yag_g", "Çoklu Doymamış Yağ (g)"], 0)
+          };
+        });
+        
+        // Veri başarıyla gelince tüm seçim kutularını besinlerle doldur ve ilk porsiyonları hazırla
+        MEALS.forEach((_, idx) => {
+          filterFoodDropdown(idx);
+        });
         hesaplaVeGuncelle();
       } catch (err) {
         console.error("foods_1500.json yüklenemedi:", err);
@@ -389,7 +414,7 @@
         if (mealsNotice) {
           const warn = document.createElement('div');
           warn.className = "p-4 bg-amber-50 border border-amber-300 rounded-xl text-amber-900 text-xs font-semibold mb-3";
-          warn.innerHTML = "⚠️ <b>Uyarı:</b> Besin veritabanı dosyası (<code>foods_1500.json</code>) bulunamadı. Lütfen dosyanın Vercel projenizde <code>index.html</code> ile yan yana yüklendiğinden emin olunuz.";
+          warn.innerHTML = "⚠️ <b>Uyarı:</b> Besin veritabanı dosyası (<code>foods_1500.json</code>) yüklenemedi. Lütfen dosyanın Vercel / GitHub reponuzda <code>index.html</code> ile yan yana bulunduğundan emin olunuz.";
           mealsNotice.prepend(warn);
         }
       }
@@ -664,8 +689,10 @@
 
     function foodSelectedChanged(mIdx) {
       const select = document.getElementById(`food_select_${mIdx}`);
-      const foodId = Number(select?.value);
-      const food = allFoods.find(f => f.id === foodId);
+      const foodId = select?.value;
+      if (!foodId) return;
+
+      const food = allFoods.find(f => String(f.id) === String(foodId));
       const label = document.getElementById(`porsiyon_tanim_${mIdx}`);
       const gramInput = document.getElementById(`food_gram_${mIdx}`);
 
@@ -689,7 +716,7 @@
       if (!select) return;
 
       if (!allFoods || allFoods.length === 0) {
-        select.innerHTML = '<option value="">Besin veritabanı yükleniyor...</option>';
+        select.innerHTML = '<option value="">Besin veritabanı yükleniyor veya bulunamadı...</option>';
         return;
       }
 
@@ -697,7 +724,7 @@
       if (!query) {
         allFoods.slice(0, 100).forEach(f => {
           const opt = document.createElement('option');
-          opt.value = f.id;
+          opt.value = String(f.id);
           opt.textContent = `${f.besin_adi} [${f.standart_porsiyon}]`;
           select.appendChild(opt);
         });
@@ -769,7 +796,7 @@
       scoredFoods.slice(0, 150).forEach(item => {
         const f = item.food;
         const opt = document.createElement('option');
-        opt.value = f.id;
+        opt.value = String(f.id);
         opt.textContent = `${f.besin_adi} [${f.standart_porsiyon}]`;
         select.appendChild(opt);
       });
@@ -780,11 +807,18 @@
     function oguneEkle(mIdx) {
       const mealName = MEALS[mIdx];
       const select = document.getElementById(`food_select_${mIdx}`);
-      const foodId = Number(select?.value);
-      if (!foodId) return;
+      const foodId = select?.value;
 
-      const food = allFoods.find(f => f.id === foodId);
-      if (!food) return;
+      if (!foodId) {
+        alert("Lütfen önce listeden eklenecek bir besin seçiniz.");
+        return;
+      }
+
+      const food = allFoods.find(f => String(f.id) === String(foodId));
+      if (!food) {
+        alert("Seçilen besin veritabanında bulunamadı.");
+        return;
+      }
 
       const mode = inputModes[mIdx] || 'portion';
       let netMiktarG = 100;
@@ -795,13 +829,13 @@
       if (mode === 'portion') {
         const portionSelect = document.getElementById(`food_portion_${mIdx}`);
         const porsiyonCarpani = Number(portionSelect?.value) || 1;
-        netMiktarG = food.referans_miktar_g * porsiyonCarpani;
+        netMiktarG = (food.referans_miktar_g || 100) * porsiyonCarpani;
 
         const selectedOptText = portionSelect?.options[portionSelect.selectedIndex]?.text || '';
         olcuTanimi = selectedOptText || `${porsiyonCarpani} Değişim (${Math.round(netMiktarG)}g)`;
         carpim = porsiyonCarpani * (yuzde / 100);
       } else {
-        netMiktarG = Number(document.getElementById(`food_gram_${mIdx}`).value) || food.referans_miktar_g;
+        netMiktarG = Number(document.getElementById(`food_gram_${mIdx}`).value) || food.referans_miktar_g || 100;
         olcuTanimi = `${netMiktarG} g/ml`;
         const refGram = food.referans_miktar_g > 0 ? food.referans_miktar_g : 100;
         carpim = (netMiktarG / refGram) * (yuzde / 100);
@@ -1369,7 +1403,8 @@
         totals.vitamin_a_mcg.toFixed(1), totals.vitamin_c_mg.toFixed(2), totals.vitamin_d_mcg.toFixed(2), totals.vitamin_b1_mg.toFixed(2), totals.vitamin_b2_mg.toFixed(2), totals.vitamin_b6_mg.toFixed(2), totals.vitamin_b12_mcg.toFixed(2), totals.folat_mcg.toFixed(1)
       ];
 
-      const csvContent = "\uFEFF" + headerRow.join(";") + "\r\n" + valRow.join(";");
+      const csvContent = "﻿" + headerRow.join(";") + "
+" + valRow.join(";");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -1380,7 +1415,7 @@
       document.body.removeChild(link);
     }
 
-    // Bulunamayan Besini Mail Olarak Gönderme Fonksiyonu (FormData ile CORS hatasız)
+    // Bulunamayan Besini Mail Olarak Gönderme Fonksiyonu (JSON Payload + Fallback Mekanizmalı)
     async function sendMissingFoodFeedback() {
       const input = document.getElementById('missingFoodInput');
       const btn = document.getElementById('btnSendFeedback');
@@ -1402,15 +1437,24 @@
       }
 
       try {
-        const formData = new FormData();
-        formData.append("access_key", WEB3FORMS_ACCESS_KEY);
-        formData.append("subject", "emreyle diyet: Yeni Besin / Ürün Önerisi Talebi");
-        formData.append("from_name", "emreyle diyet Web Sitesi");
-        formData.append("message", `Kullanıcı tarafından veritabanında bulunamayan ve eklenmesi talep edilen besin:\n\n👉 ${foodName}\n\nTarih: ${new Date().toLocaleString('tr-TR')}`);
+        const payload = {
+          access_key: WEB3FORMS_ACCESS_KEY,
+          name: "emreyle diyet Kullanıcısı",
+          subject: "emreyle diyet: Yeni Besin / Ürün Önerisi Talebi",
+          message: `Kullanıcı tarafından veritabanında bulunamayan ve eklenmesi talep edilen besin:
+
+👉 ${foodName}
+
+Tarih: ${new Date().toLocaleString('tr-TR')}`
+        };
 
         const response = await fetch("https://api.web3forms.com/submit", {
           method: "POST",
-          body: formData
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(payload)
         });
 
         const result = await response.json();
@@ -1425,9 +1469,10 @@
         }
       } catch (err) {
         console.error("Geri bildirim hatası:", err);
+        // Doğrudan e-posta veya Instagram alternatifi sunarak kullanıcının mağdur olmasını önle
         if (status) {
-          status.className = "mt-2 text-xs font-semibold text-rose-600 block";
-          status.textContent = "Gönderim sırasında bir hata oluştu: " + err.message;
+          status.className = "mt-2 text-xs font-semibold text-amber-700 block";
+          status.innerHTML = `⚠️ Otomatik form iletiminde bağlantı hatası oluştu. Talebinizi doğrudan <a href="https://instagram.com/emreyle.diyet" target="_blank" class="underline font-bold text-teal-800">@emreyle.diyet</a> Instagram hesabımıza iletebilirsiniz.`;
         }
       } finally {
         if (btn) btn.disabled = false;
